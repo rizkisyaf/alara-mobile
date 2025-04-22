@@ -10,7 +10,7 @@ import {
   ActivityIndicator
 } from 'react-native';
 import { useStripe } from '@stripe/stripe-react-native';
-import { colors } from '../constants/colors';
+import { Colors } from '../constants/Colors';
 import { typography } from '../constants/typography';
 import { useAuth } from '../context/AuthContext'; // Import useAuth for logout
 import { createSubscriptionIntent } from '../api/billing'; // Import the new API function
@@ -110,7 +110,7 @@ function PaywallScreen({ navigation }) {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="light-content" backgroundColor={colors.background} />
+      <StatusBar barStyle="light-content" backgroundColor={Colors.dark.background} />
       <View style={styles.container}>
         <Text style={styles.title}>Unlock Alara Access</Text>
         <Text style={styles.subtitle}>Choose your plan to continue:</Text>
@@ -177,7 +177,7 @@ function PaywallScreen({ navigation }) {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: Colors.dark.background,
   },
   container: {
     flex: 1,
@@ -188,13 +188,13 @@ const styles = StyleSheet.create({
   title: {
     fontSize: typography.fontSizes.h1,
     fontWeight: typography.fontWeights.bold,
-    color: colors.text,
+    color: Colors.dark.text,
     marginBottom: 10,
     textAlign: 'center',
   },
   subtitle: {
     fontSize: typography.fontSizes.large,
-    color: colors.text,
+    color: Colors.dark.text,
     marginBottom: 30,
     textAlign: 'center',
   },
@@ -206,44 +206,44 @@ const styles = StyleSheet.create({
   },
   planOption: {
     borderWidth: 2,
-    borderColor: colors.border,
+    borderColor: Colors.dark.tint,
     borderRadius: 10,
     padding: 20,
     alignItems: 'center',
     width: '45%', // Adjust width for spacing
-    backgroundColor: colors.card, // Use card background
+    backgroundColor: Colors.dark.card, // Use card background
   },
   planOptionSelected: {
-    borderColor: colors.accent, // Highlight selected plan (using accent/primary)
+    borderColor: Colors.dark.tint, // Highlight selected plan (using accent/primary)
     backgroundColor: '#222', // Slightly lighter background when selected
   },
   planTitle: {
     fontSize: typography.fontSizes.h4,
     fontWeight: typography.fontWeights.semiBold,
-    color: colors.cardText,
+    color: Colors.dark.text,
     marginBottom: 5,
   },
   planPrice: {
     fontSize: typography.fontSizes.h2,
     fontWeight: typography.fontWeights.bold,
-    color: colors.cardText,
+    color: Colors.dark.text,
     marginBottom: 2,
   },
   planFrequency: {
     fontSize: typography.fontSizes.small,
-    color: colors.text, // Slightly dimmer text
+    color: Colors.dark.text, // Slightly dimmer text
     marginBottom: 5,
   },
   planEquivalent: {
     fontSize: typography.fontSizes.small,
-    color: colors.success, // Use success color
+    color: Colors.success, // Use success color
     marginTop: 5,
   },
   badgeContainer: {
       position: 'absolute',
       top: -12, // Adjust position
       // right: -10,
-      backgroundColor: colors.success, // Badge color
+      backgroundColor: Colors.success, // Badge color
       paddingHorizontal: 8,
       paddingVertical: 3,
       borderRadius: 12, // Pill shape
@@ -257,18 +257,18 @@ const styles = StyleSheet.create({
   button: {
     width: '100%',
     height: 50,
-    backgroundColor: colors.primary,
+    backgroundColor: Colors.dark.tint,
     justifyContent: 'center',
     alignItems: 'center',
     borderRadius: 8,
     marginTop: 10,
   },
   buttonDisabled: {
-    backgroundColor: colors.secondary,
+    backgroundColor: Colors.dark.text,
     opacity: 0.5,
   },
   buttonText: {
-    color: colors.buttonTextPrimary,
+    color: Colors.dark.background,
     fontSize: typography.fontSizes.large,
     fontWeight: typography.fontWeights.bold,
   },
@@ -278,7 +278,7 @@ const styles = StyleSheet.create({
     // alignSelf: 'center', // Center if needed
   },
   logoutButtonText: {
-    color: colors.error, // Use error color for logout
+    color: Colors.error, // Use error color for logout
     fontSize: typography.fontSizes.medium,
   },
   // Link styles if needed later

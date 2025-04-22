@@ -1,14 +1,11 @@
-// TODO: Use environment variables for Stripe keys in production builds
-import { STRIPE_PUBLISHABLE_KEY as ENV_STRIPE_KEY } from '@env'; // Import from @env
+// WARNING: Hardcoding keys is insecure. Use environment variables for production.
+const hardcodedPublishableKey = 'pk_test_51N9hXsAUFhzONqTblR3yUfFqL4M2O5qP9j5tV3sN7qR8zL3eK9uA0dJ6gH9sO7rC2tX1zI9fJ0gX3mN00aBcDefGh'; // Replace if this is not your key
 
-// Your Stripe Publishable Key (Loaded from .env.local via react-native-dotenv)
-export const STRIPE_PUBLISHABLE_KEY = ENV_STRIPE_KEY;
-
-if (!STRIPE_PUBLISHABLE_KEY) {
-  console.warn(
-    'Stripe Publishable Key is missing. Make sure it is set in your .env.local file '
-    + 'and you have restarted the Metro bundler.'
-  );
+if (!hardcodedPublishableKey) {
+  console.error('Error: Hardcoded Stripe publishable key is missing or empty in config/stripe.js');
 }
 
-// Add other Stripe-related config if needed 
+export default {
+  publishableKey: hardcodedPublishableKey,
+  // merchantIdentifier: 'merchant.identifier', // Optional: for Apple Pay
+}; 

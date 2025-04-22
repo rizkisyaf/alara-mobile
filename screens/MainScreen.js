@@ -2,7 +2,7 @@ import React, { useState, useCallback, useEffect } from 'react';
 import { StyleSheet, KeyboardAvoidingView, Platform, View, ActivityIndicator, Text, TouchableOpacity, StatusBar, Alert } from 'react-native';
 import { GiftedChat, InputToolbar, Send, Bubble } from 'react-native-gifted-chat';
 import { SafeAreaView } from 'react-native-safe-area-context'; // Use edges prop
-import { colors } from '../constants/colors';
+import { Colors } from '../constants/Colors';
 import { typography } from '../constants/typography';
 import { useAuth } from '../context/AuthContext';
 import { sendMessage } from '../api/chat';
@@ -216,7 +216,7 @@ function MainScreen() {
             <Ionicons 
                 name={isRecording ? "stop-circle-outline" : "mic-outline"} 
                 size={28} 
-                color={isRecording ? colors.error : colors.primary} // Example: Red when recording
+                color={isRecording ? Colors.error : Colors.dark.tint} // Example: Red when recording
             /> 
          </TouchableOpacity>
       )}
@@ -334,7 +334,7 @@ function MainScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: Colors.dark.background,
   },
   headerContainer: {
     flexDirection: 'row',
@@ -343,14 +343,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 15,
     paddingTop: Platform.OS === 'ios' ? 10 : (StatusBar.currentHeight || 0) + 10,
     paddingBottom: 10,
-    backgroundColor: colors.background,
+    backgroundColor: Colors.dark.background,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border,
+    borderBottomColor: Colors.dark.tint,
   },
   headerTitle: {
     fontSize: typography.fontSizes.h3,
     fontWeight: typography.fontWeights.medium,
-    color: colors.text,
+    color: Colors.dark.text,
     textAlign: 'center',
     flex: 2,
   },
@@ -368,11 +368,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   messagesContainer: {
-    backgroundColor: colors.background,
+    backgroundColor: Colors.dark.background,
     paddingBottom: 10,
   },
   inputToolbar: {
-    backgroundColor: colors.card,
+    backgroundColor: Colors.dark.card,
     borderTopWidth: 0,
     paddingVertical: 8,
     paddingHorizontal: 10,
@@ -403,7 +403,7 @@ const styles = StyleSheet.create({
     // backgroundColor: colors.secondary, 
   },
   bubbleLeft: {
-    backgroundColor: colors.card,
+    backgroundColor: Colors.dark.card,
     borderTopLeftRadius: 0,
     borderTopRightRadius: 15,
     borderBottomLeftRadius: 15,
@@ -412,7 +412,7 @@ const styles = StyleSheet.create({
     marginBottom: 5,
   },
   bubbleRight: {
-    backgroundColor: colors.primary,
+    backgroundColor: Colors.dark.tint,
     borderTopLeftRadius: 15,
     borderTopRightRadius: 0,
     borderBottomLeftRadius: 15,
@@ -421,16 +421,16 @@ const styles = StyleSheet.create({
     marginBottom: 5,
   },
   bubbleTextLeft: {
-    color: colors.cardText,
+    color: Colors.dark.text,
     fontSize: typography.fontSizes.body,
   },
   bubbleTextRight: {
-    color: colors.buttonTextPrimary,
+    color: Colors.dark.background,
     fontSize: typography.fontSizes.body,
   },
   // --- NEW Error Bubble Styles --- //
   bubbleError: {
-    backgroundColor: colors.errorBackground || '#ffebee', // Use theme error bg or fallback
+    backgroundColor: Colors.errorBackground || '#ffebee', // Use theme error bg or fallback
     borderTopLeftRadius: 0,
     borderTopRightRadius: 15,
     borderBottomLeftRadius: 15,
@@ -439,7 +439,7 @@ const styles = StyleSheet.create({
     marginBottom: 5,
   },
   bubbleTextError: {
-      color: colors.error || '#b71c1c', // Use theme error color or fallback
+      color: Colors.error || '#b71c1c', // Use theme error color or fallback
       fontSize: typography.fontSizes.body,
   },
   // --- End Error Bubble Styles --- //
@@ -452,14 +452,14 @@ const styles = StyleSheet.create({
   footerText: {
     marginLeft: 10,
     fontSize: typography.fontSizes.small,
-    color: colors.textSecondary,
+    color: Colors.dark.textSecondary,
   },
 });
 
 // Custom styles for MenuOptions
 const menuOptionsStyles = {
   optionsContainer: {
-    backgroundColor: colors.card,
+    backgroundColor: Colors.dark.card,
     borderRadius: 8,
     padding: 5,
     marginTop: 35,
@@ -468,7 +468,7 @@ const menuOptionsStyles = {
     padding: 10,
   },
   optionText: {
-    color: colors.text,
+    color: Colors.dark.text,
     fontSize: typography.fontSizes.body,
   },
 };

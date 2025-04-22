@@ -8,7 +8,7 @@ import {
   ActivityIndicator,
   Linking // Import Linking
 } from 'react-native';
-import { colors } from '../constants/colors';
+import { Colors } from '../constants/Colors';
 import { typography } from '../constants/typography';
 import { useAuth } from '../context/AuthContext'; // Import useAuth
 import { createBillingPortalSession } from '../api/billing'; // Import the new API helper
@@ -88,12 +88,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 30, // Increase padding
     paddingTop: 60, // Add more top padding
-    backgroundColor: colors.background,
+    backgroundColor: Colors.dark.background,
   },
   title: {
     fontSize: typography.fontSizes.h2, // Adjust size
     fontWeight: typography.fontWeights.bold,
-    color: colors.text,
+    color: Colors.dark.text,
     marginBottom: 40, // Increase spacing
   },
   infoContainer: {
@@ -103,44 +103,44 @@ const styles = StyleSheet.create({
       marginBottom: 15,
       paddingVertical: 10,
       paddingHorizontal: 15,
-      backgroundColor: colors.card, // Add card background
+      backgroundColor: Colors.dark.card, // Add card background
       borderRadius: 8,
   },
   infoLabel: {
       fontSize: typography.fontSizes.body,
-      color: colors.textSecondary,
+      color: Colors.dark.textSecondary,
       fontWeight: typography.fontWeights.medium,
   },
   infoValue: {
       fontSize: typography.fontSizes.body,
-      color: colors.text,
+      color: Colors.dark.text,
       fontWeight: typography.fontWeights.regular,
   },
   // Status-specific styling (add more as needed)
   status_active: {
-      color: colors.success || 'green',
+      color: Colors.success || 'green',
       fontWeight: 'bold',
   },
   status_canceled: {
-       color: colors.error || 'red',
+       color: Colors.error || 'red',
        fontWeight: 'bold',
   },
    status_active_grace: {
-      color: colors.warning || 'orange',
+      color: Colors.warning || 'orange',
       fontWeight: 'bold',
   },
     status_past_due: {
-      color: colors.error || 'red',
+      color: Colors.error || 'red',
       fontWeight: 'bold',
   },
    status_unknown: {
-      color: colors.textSecondary,
+      color: Colors.dark.textSecondary,
       fontStyle: 'italic',
   },
   button: {
     width: '100%',
     height: 50,
-    backgroundColor: colors.primary,
+    backgroundColor: Colors.dark.tint,
     justifyContent: 'center',
     alignItems: 'center',
     borderRadius: 8,
@@ -151,13 +151,13 @@ const styles = StyleSheet.create({
       opacity: 0.6,
   },
   buttonText: {
-    color: colors.buttonTextPrimary,
+    color: Colors.dark.background,
     fontSize: typography.fontSizes.large,
     fontWeight: typography.fontWeights.bold,
   },
   infoText: {
       fontSize: typography.fontSizes.small,
-      color: colors.textSecondary,
+      color: Colors.dark.textSecondary,
       textAlign: 'center',
       marginTop: 10,
       lineHeight: 18,

@@ -12,20 +12,22 @@ import {
   KeyboardAvoidingView,
   Platform
 } from 'react-native';
-import { colors } from '../constants/colors';
+// Fix import casing and usage
+import { Colors } from '../constants/Colors';
 import { typography } from '../constants/typography';
 import { registerUser } from '../api/auth';
 import AlaraLogo from '../assets/images/alara-logo.svg';
 import { useAuth } from '../context/AuthContext';
+import { useRouter } from 'expo-router';
 
-// TODO: Add navigation prop type if using TypeScript
-function SignupScreen({ navigation }) {
+function SignupScreen() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { signup } = useAuth();
+  const router = useRouter();
 
   const handleSignup = async () => {
     // Basic validation
@@ -48,7 +50,7 @@ function SignupScreen({ navigation }) {
       Alert.alert(
         'Signup Successful',
         'Please check your email to verify your account before logging in.',
-        [{ text: 'OK', onPress: () => navigation.navigate('Login') }]
+        [{ text: 'OK', onPress: () => router.replace('/(auth)/login') }]
       );
       setName('');
       setEmail('');
@@ -62,7 +64,7 @@ function SignupScreen({ navigation }) {
   };
 
   const handleGoToLogin = () => {
-    navigation.navigate('Login');
+    router.replace('/(auth)/login');
   };
 
   return (
@@ -80,7 +82,7 @@ function SignupScreen({ navigation }) {
         <TextInput
           style={styles.input}
           placeholder="Name"
-          placeholderTextColor={colors.textSecondary}
+          placeholderTextColor={Colors.dark.tint}
           value={name}
           onChangeText={setName}
           autoCapitalize="words"
@@ -89,7 +91,7 @@ function SignupScreen({ navigation }) {
         <TextInput
           style={styles.input}
           placeholder="Email"
-          placeholderTextColor={colors.textSecondary}
+          placeholderTextColor={Colors.dark.tint}
           value={email}
           onChangeText={setEmail}
           keyboardType="email-address"
@@ -100,7 +102,7 @@ function SignupScreen({ navigation }) {
         <TextInput
           style={styles.input}
           placeholder="Password (min 8 characters)"
-          placeholderTextColor={colors.textSecondary}
+          placeholderTextColor={Colors.dark.tint}
           value={password}
           onChangeText={setPassword}
           secureTextEntry
@@ -109,7 +111,7 @@ function SignupScreen({ navigation }) {
         <TextInput
           style={styles.input}
           placeholder="Confirm Password"
-          placeholderTextColor={colors.textSecondary}
+          placeholderTextColor={Colors.dark.tint}
           value={confirmPassword}
           onChangeText={setConfirmPassword}
           secureTextEntry
@@ -121,7 +123,7 @@ function SignupScreen({ navigation }) {
           disabled={isLoading}
         >
           {isLoading ? (
-            <ActivityIndicator size="small" color={colors.buttonTextPrimary} />
+            <ActivityIndicator size="small" color={Colors.dark.background} />
           ) : (
             <Text style={styles.buttonText}>Sign Up</Text>
           )}
@@ -142,7 +144,7 @@ function SignupScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: Colors.dark.background,
   },
   innerContainer: {
     flex: 1,
@@ -157,17 +159,17 @@ const styles = StyleSheet.create({
   title: {
     fontSize: typography.fontSizes.h1,
     fontWeight: typography.fontWeights.bold,
-    color: colors.text,
+    color: Colors.dark.text,
     marginBottom: 30,
     textAlign: 'center',
   },
   input: {
     width: '100%',
     height: 50,
-    backgroundColor: colors.inputBackground,
-    color: colors.inputText,
+    backgroundColor: Colors.dark.background,
+    color: Colors.dark.text,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: Colors.dark.tint,
     borderRadius: 8,
     paddingHorizontal: 15,
     marginBottom: 15,
@@ -176,18 +178,18 @@ const styles = StyleSheet.create({
   button: {
     width: '100%',
     height: 50,
-    backgroundColor: colors.primary,
+    backgroundColor: Colors.dark.tint,
     justifyContent: 'center',
     alignItems: 'center',
     borderRadius: 8,
     marginTop: 10,
   },
   buttonDisabled: {
-    backgroundColor: colors.secondary,
+    backgroundColor: Colors.dark.text,
     opacity: 0.7,
   },
   buttonText: {
-    color: colors.buttonTextPrimary,
+    color: Colors.dark.background,
     fontSize: typography.fontSizes.large,
     fontWeight: typography.fontWeights.bold,
   },
@@ -195,7 +197,7 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   linkText: {
-    color: colors.primary,
+    color: Colors.dark.tint,
     fontSize: typography.fontSizes.medium,
   },
   linkTextDisabled: {
@@ -203,4 +205,4 @@ const styles = StyleSheet.create({
   }
 });
 
-export default SignupScreen; 
+export default SignupScreen;

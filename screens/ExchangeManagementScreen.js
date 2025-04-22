@@ -10,15 +10,15 @@ import {
   ActivityIndicator,
   Alert,
 } from 'react-native';
-import { colors } from '../constants/colors';
+import { Colors } from '../constants/Colors';
 import { typography } from '../constants/typography';
 import { useAuth } from '../context/AuthContext';
 import { listExchangeKeys, deleteExchangeKey } from '../api/exchanges';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import AddExchangeModal from '../components/AddExchangeModal';
 
-// TODO: Add navigation prop type if using TypeScript
-function ExchangeManagementScreen({ navigation }) {
+// Remove unused navigation prop
+function ExchangeManagementScreen() {
   const { authToken } = useAuth();
   const [exchanges, setExchanges] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -102,7 +102,7 @@ function ExchangeManagementScreen({ navigation }) {
         style={styles.deleteButton} 
         onPress={() => handleDeleteExchange(item.connection_id, item.nickname)}
       >
-         <Ionicons name="trash-outline" size={24} color={colors.error} />
+         <Ionicons name="trash-outline" size={24} color={Colors.error} />
       </TouchableOpacity>
     </View>
   );
@@ -110,7 +110,7 @@ function ExchangeManagementScreen({ navigation }) {
   // --- Render Logic --- //
   let content;
   if (isLoading) {
-    content = <ActivityIndicator size="large" color={colors.primary} style={styles.loader} />;
+    content = <ActivityIndicator size="large" color={Colors.dark.tint} style={styles.loader} />;
   } else if (error) {
     content = <Text style={styles.errorText}>Error: {error}</Text>;
   } else if (exchanges.length === 0) {
@@ -132,7 +132,7 @@ function ExchangeManagementScreen({ navigation }) {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="light-content" backgroundColor={colors.background} />
+      <StatusBar barStyle="light-content" backgroundColor={Colors.dark.background} />
       <View style={styles.container}>
         <View style={styles.header}>
              <Text style={styles.title}>Manage Exchanges</Text>
@@ -161,7 +161,7 @@ function ExchangeManagementScreen({ navigation }) {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: Colors.dark.background,
   },
   container: {
     flex: 1,
@@ -175,12 +175,12 @@ const styles = StyleSheet.create({
       paddingTop: 20,
       paddingBottom: 10, // Added padding bottom
       borderBottomWidth: 1,
-      borderBottomColor: colors.card, // Subtle border
+      borderBottomColor: Colors.dark.tint, // Use tint for border?
   },
   title: {
     fontSize: typography.fontSizes.h2,
     fontWeight: typography.fontWeights.bold,
-    color: colors.text,
+    color: Colors.dark.text,
   },
   contentArea: {
       flex: 1, // Takes up remaining space
@@ -188,9 +188,10 @@ const styles = StyleSheet.create({
   },
   loader: {
       marginTop: 50,
+      color: Colors.dark.tint,
   },
   errorText: {
-      color: colors.error,
+      color: '#FF6B6B',
       textAlign: 'center',
       marginTop: 50,
       paddingHorizontal: 20,
@@ -202,7 +203,7 @@ const styles = StyleSheet.create({
       paddingHorizontal: 20,
   },
   emptyStateText: {
-      color: colors.text,
+      color: Colors.dark.text,
       fontSize: typography.fontSizes.body,
       opacity: 0.7,
       textAlign: 'center', // Center text
@@ -212,7 +213,7 @@ const styles = StyleSheet.create({
       marginTop: 10,
   },
   itemContainer: {
-    backgroundColor: colors.card,
+    backgroundColor: Colors.dark.background,
     padding: 15,
     marginVertical: 5,
     marginHorizontal: 15, // Add horizontal margin for card effect
@@ -220,19 +221,21 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    borderColor: Colors.dark.tint,
+    borderWidth: 1,
   },
   itemDetails: {
       flex: 1, // Allow details to take available space
       marginRight: 10, // Space before delete button
   },
   itemNickname: {
-    color: colors.cardText,
+    color: Colors.dark.text,
     fontSize: typography.fontSizes.large,
     fontWeight: typography.fontWeights.medium,
     marginBottom: 3,
   },
   itemExchangeId: {
-      color: colors.text,
+      color: Colors.dark.text,
       fontSize: typography.fontSizes.small,
       opacity: 0.8,
   },
@@ -241,7 +244,7 @@ const styles = StyleSheet.create({
       padding: 5, // Add padding for easier touch
   },
   addButton: {
-    backgroundColor: colors.primary,
+    backgroundColor: Colors.dark.tint,
     paddingVertical: 15,
     borderRadius: 8,
     alignItems: 'center',
@@ -250,7 +253,7 @@ const styles = StyleSheet.create({
     // Removed absolute positioning
   },
   addButtonText: {
-    color: colors.buttonTextPrimary,
+    color: Colors.dark.background,
     fontSize: typography.fontSizes.large,
     fontWeight: typography.fontWeights.bold,
   },

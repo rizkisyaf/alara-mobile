@@ -7,7 +7,7 @@ import {
   Alert, 
   ActivityIndicator 
 } from 'react-native';
-import { colors } from '../constants/colors';
+import { Colors } from '../constants/Colors';
 import { typography } from '../constants/typography';
 import { useAuth } from '../context/AuthContext'; // Import useAuth
 import { requestPasswordReset } from '../api/auth'; // Import the new API helper
@@ -82,7 +82,7 @@ function SettingsScreen() {
             disabled={isLoadingReset}
         >
           {isLoadingReset ? (
-              <ActivityIndicator size="small" color={colors.primary} />
+              <ActivityIndicator size="small" color={Colors.dark.tint} />
           ) : (
               <Text style={styles.actionButtonText}>Request Password Reset</Text>
           )}
@@ -107,28 +107,28 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 20,
     paddingTop: 60,
-    backgroundColor: colors.background,
+    backgroundColor: Colors.dark.background,
   },
    title: {
     fontSize: typography.fontSizes.h2,
     fontWeight: typography.fontWeights.bold,
-    color: colors.text,
+    color: Colors.dark.text,
     marginBottom: 30,
     textAlign: 'center',
   },
   sectionContainer: {
       marginBottom: 30,
-      backgroundColor: colors.card, // Card background
+      backgroundColor: Colors.dark.card, // Card background
       borderRadius: 8,
       padding: 15,
   },
   sectionTitle: {
       fontSize: typography.fontSizes.h4,
       fontWeight: typography.fontWeights.medium,
-      color: colors.text,
+      color: Colors.dark.text,
       marginBottom: 15,
       borderBottomWidth: 1,
-      borderBottomColor: colors.border,
+      borderBottomColor: Colors.dark.tint,
       paddingBottom: 5,
   },
   infoRow: {
@@ -138,12 +138,12 @@ const styles = StyleSheet.create({
   },
   infoLabel: {
       fontSize: typography.fontSizes.body,
-      color: colors.textSecondary,
+      color: Colors.dark.textSecondary,
       marginRight: 10,
   },
   infoValue: {
       fontSize: typography.fontSizes.body,
-      color: colors.text,
+      color: Colors.dark.text,
       fontWeight: typography.fontWeights.regular,
       flexShrink: 1, // Allow text to wrap if long
       textAlign: 'right',
@@ -158,20 +158,20 @@ const styles = StyleSheet.create({
   actionButton: {
       backgroundColor: 'transparent', // Use background from card
       borderWidth: 1,
-      borderColor: colors.primary,
+      borderColor: Colors.dark.tint,
       marginBottom: 10, // Space between actions
   },
   actionButtonText: {
-      color: colors.primary,
+      color: Colors.dark.tint,
       fontSize: typography.fontSizes.body,
       fontWeight: typography.fontWeights.medium,
   },
   logoutButton: {
-      backgroundColor: colors.errorBackground || '#ffebee', // Error-like background
+      backgroundColor: Colors.errorBackground || '#ffebee', // Error-like background
       marginTop: 20, // Space from sections above
   },
   logoutButtonText: {
-      color: colors.error || '#b71c1c',
+      color: Colors.error || '#b71c1c',
       fontSize: typography.fontSizes.large,
       fontWeight: typography.fontWeights.bold,
   },
