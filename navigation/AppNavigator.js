@@ -10,6 +10,7 @@ import LoginScreen from '../screens/LoginScreen';
 import SignupScreen from '../screens/SignupScreen';
 import PaywallScreen from '../screens/PaywallScreen';
 import MainScreen from '../screens/MainScreen';
+import ExchangeManagementScreen from '../screens/ExchangeManagementScreen'; // Import the new screen
 
 const Stack = createNativeStackNavigator();
 
@@ -35,8 +36,12 @@ function AppNavigator() {
         {authToken ? ( // Render based on authToken presence
           // User is logged in
           isSubscribed ? ( // Use actual subscription status
-            // Logged in and Subscribed: Show Main App
-            <Stack.Screen name="Main" component={MainScreen} />
+            // Logged in and Subscribed: Show Main App Screens
+            <>
+                <Stack.Screen name="Main" component={MainScreen} />
+                <Stack.Screen name="ExchangeManagement" component={ExchangeManagementScreen} />
+                {/* Add other subscribed screens here */}
+            </>
           ) : (
             // Logged in but NOT Subscribed (or status unknown yet): Show Paywall
             <Stack.Screen name="Paywall" component={PaywallScreen} />
