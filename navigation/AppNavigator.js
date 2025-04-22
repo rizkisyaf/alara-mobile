@@ -11,6 +11,8 @@ import SignupScreen from '../screens/SignupScreen';
 import PaywallScreen from '../screens/PaywallScreen';
 import MainScreen from '../screens/MainScreen';
 import ExchangeManagementScreen from '../screens/ExchangeManagementScreen'; // Import the new screen
+import BillingScreen from '../screens/BillingScreen'; // Import BillingScreen
+import SettingsScreen from '../screens/SettingsScreen'; // Import SettingsScreen
 
 const Stack = createNativeStackNavigator();
 
@@ -40,6 +42,8 @@ function AppNavigator() {
             <>
                 <Stack.Screen name="Main" component={MainScreen} />
                 <Stack.Screen name="ExchangeManagement" component={ExchangeManagementScreen} />
+                <Stack.Screen name="Billing" component={BillingScreen} />
+                <Stack.Screen name="Settings" component={SettingsScreen} />
                 {/* Add other subscribed screens here */}
             </>
           ) : (

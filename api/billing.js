@@ -46,4 +46,49 @@ export const createSubscriptionIntent = async (token, planId) => {
     console.error('Create subscription intent request failed:', error);
     throw error instanceof Error ? error : new Error(String(error));
   }
+};
+
+/**
+ * Calls the backend to create a Stripe Customer Portal session.
+ * @param {string} token - The JWT authentication token.
+ * @returns {Promise<{url: string}>} - Object containing the URL for the portal session.
+ * @throws {Error} - Throws an error if the request fails.
+ */
+export const createBillingPortalSession = async (token) => {
+  const url = `${API_BASE_URL}/api/billing/create-portal-session`;
+  console.log(`Creating billing portal session at: ${url}`);
+
+  if (!token) throw new Error('Authentication token is required.');
+
+  try {
+    const response = await fetch(url, {
+      method: 'POST', // Use POST as defined in the backend router
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Accept': 'application/json',
+         // No 'Content-Type' needed for POST without body
+      },
+      // No body needed for this request
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      const errorMessage = data.detail || `HTTP error! status: ${response.status}`;
+      console.error('Create Billing Portal Session API error:', errorMessage, 'Status:', response.status);
+      throw new Error(errorMessage);
+    }
+
+    if (!data.url) {
+        console.error('API response missing portal URL:', data);
+        throw new Error('Failed to retrieve billing portal URL.');
+    }
+
+    console.log('Billing portal session created successfully.');
+    return data; // { url: "..." }
+
+  } catch (error) {
+    console.error('Create billing portal session request failed:', error);
+    throw error instanceof Error ? error : new Error(String(error));
+  }
 }; 

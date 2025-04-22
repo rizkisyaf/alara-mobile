@@ -139,4 +139,44 @@ export const fetchUserStatus = async (token) => {
   }
 };
 
+/**
+ * Calls the backend to request a password reset email.
+ * @param {string} email - The user's email address.
+ * @returns {Promise<object>} - The success message from the API.
+ * @throws {Error} - Throws an error if the request fails.
+ */
+export const requestPasswordReset = async (email) => {
+    const url = `${API_BASE_URL}/api/auth/forgot-password`;
+    console.log(`Requesting password reset for: ${email} at ${url}`);
+
+    if (!email) throw new Error('Email address is required.');
+
+    try {
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+            },
+            body: JSON.stringify({ email: email }),
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            const errorMessage = data.detail || `HTTP error! status: ${response.status}`;
+            console.error('Request Password Reset API error:', errorMessage, 'Status:', response.status);
+            // Handle specific errors? e.g., user not found (backend might not reveal this)
+            throw new Error(errorMessage);
+        }
+
+        console.log('Request password reset success.');
+        return data; // Expecting { status: 'success', message: '...' }
+
+    } catch (error) {
+        console.error('Request password reset failed:', error);
+        throw error instanceof Error ? error : new Error(String(error));
+    }
+};
+
 // TODO: Implement registerUser function after checking backend requirements 

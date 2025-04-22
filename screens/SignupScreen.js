@@ -9,10 +9,14 @@ import {
   StatusBar,
   Alert,
   ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform
 } from 'react-native';
 import { colors } from '../constants/colors';
 import { typography } from '../constants/typography';
 import { registerUser } from '../api/auth';
+import AlaraLogo from '../assets/images/alara-logo.svg';
+import { useAuth } from '../context/AuthContext';
 
 // TODO: Add navigation prop type if using TypeScript
 function SignupScreen({ navigation }) {
@@ -21,6 +25,7 @@ function SignupScreen({ navigation }) {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const { signup } = useAuth();
 
   const handleSignup = async () => {
     // Basic validation
@@ -39,86 +44,75 @@ function SignupScreen({ navigation }) {
 
     setIsLoading(true);
     try {
-        console.log('Calling registerUser API...');
-        const response = await registerUser(name, email, password);
-
-        console.log('Signup successful:', response.message);
-        Alert.alert(
-            'Signup Successful',
-            response.message || 'Please check your email to verify your account.',
-            [
-                { text: "OK", onPress: () => navigation.navigate('Login') }
-            ]
-        );
-        // Clear fields after successful signup and navigation?
-        setName('');
-        setEmail('');
-        setPassword('');
-        setConfirmPassword('');
-
+      await signup(email, password, name);
+      Alert.alert(
+        'Signup Successful',
+        'Please check your email to verify your account before logging in.',
+        [{ text: 'OK', onPress: () => navigation.navigate('Login') }]
+      );
+      setName('');
+      setEmail('');
+      setPassword('');
+      setConfirmPassword('');
     } catch (error) {
-        console.error('Signup failed:', error);
-        Alert.alert('Signup Error', error.message || 'An unexpected error occurred. Please try again.');
+      Alert.alert('Signup Failed', error.message || 'An unexpected error occurred.');
     } finally {
-        setIsLoading(false);
+      setIsLoading(false);
     }
   };
 
   const handleGoToLogin = () => {
-    navigation.navigate('Login'); // Navigate back to Login screen
+    navigation.navigate('Login');
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="light-content" backgroundColor={colors.background} />
-      <View style={styles.container}>
+    <KeyboardAvoidingView 
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      style={styles.container}
+    >
+      <View style={styles.innerContainer}>
+        <View style={styles.logoContainer}>
+          <AlaraLogo width={120} height={120} />
+        </View>
+
         <Text style={styles.title}>Create Account</Text>
 
         <TextInput
           style={styles.input}
-          placeholder="Full Name"
-          placeholderTextColor={colors.text}
+          placeholder="Name"
+          placeholderTextColor={colors.textSecondary}
           value={name}
           onChangeText={setName}
           autoCapitalize="words"
-          autoCorrect={false}
-          textContentType="name"
-          editable={!isLoading}
         />
 
         <TextInput
           style={styles.input}
           placeholder="Email"
-          placeholderTextColor={colors.text}
+          placeholderTextColor={colors.textSecondary}
           value={email}
           onChangeText={setEmail}
           keyboardType="email-address"
           autoCapitalize="none"
           autoCorrect={false}
-          textContentType="emailAddress"
-          editable={!isLoading}
         />
 
         <TextInput
           style={styles.input}
           placeholder="Password (min 8 characters)"
-          placeholderTextColor={colors.text}
+          placeholderTextColor={colors.textSecondary}
           value={password}
           onChangeText={setPassword}
           secureTextEntry
-          textContentType="newPassword"
-          editable={!isLoading}
         />
 
         <TextInput
           style={styles.input}
           placeholder="Confirm Password"
-          placeholderTextColor={colors.text}
+          placeholderTextColor={colors.textSecondary}
           value={confirmPassword}
           onChangeText={setConfirmPassword}
           secureTextEntry
-          textContentType="newPassword"
-          editable={!isLoading}
         />
 
         <TouchableOpacity
@@ -127,40 +121,45 @@ function SignupScreen({ navigation }) {
           disabled={isLoading}
         >
           {isLoading ? (
-             <ActivityIndicator size="small" color={colors.buttonTextPrimary} />
+            <ActivityIndicator size="small" color={colors.buttonTextPrimary} />
           ) : (
             <Text style={styles.buttonText}>Sign Up</Text>
           )}
         </TouchableOpacity>
 
         <TouchableOpacity
-            onPress={handleGoToLogin}
-            style={styles.linkContainer}
-            disabled={isLoading}
+          onPress={handleGoToLogin}
+          style={styles.linkContainer}
+          disabled={isLoading}
         >
           <Text style={[styles.linkText, isLoading && styles.linkTextDisabled]}>Already have an account? Login</Text>
         </TouchableOpacity>
       </View>
-    </SafeAreaView>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
+  container: {
     flex: 1,
     backgroundColor: colors.background,
   },
-  container: {
+  innerContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: 20,
+    paddingHorizontal: 30,
+  },
+  logoContainer: {
+    marginBottom: 40,
+    alignItems: 'center',
   },
   title: {
     fontSize: typography.fontSizes.h1,
     fontWeight: typography.fontWeights.bold,
     color: colors.text,
     marginBottom: 30,
+    textAlign: 'center',
   },
   input: {
     width: '100%',
@@ -200,7 +199,7 @@ const styles = StyleSheet.create({
     fontSize: typography.fontSizes.medium,
   },
   linkTextDisabled: {
-      opacity: 0.5,
+    opacity: 0.5,
   }
 });
 

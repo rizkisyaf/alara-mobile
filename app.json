@@ -2,20 +2,28 @@
   "expo": {
     "name": "alara-mobile",
     "slug": "alara-mobile",
+    "scheme": "alara",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "myapp",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.skolpmcp.alaramobile",
+      "infoPlist": {
+        "NSMicrophoneUsageDescription": "Alara needs access to your microphone to enable voice input for chat commands."
+      }
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "package": "com.skolpmcp.alaramobile",
+      "permissions": [
+        "android.permission.RECORD_AUDIO"
+      ]
     },
     "web": {
       "bundler": "metro",
@@ -32,10 +40,54 @@
           "resizeMode": "contain",
           "backgroundColor": "#ffffff"
         }
+      ],
+      [
+        "@config-plugins/react-native-blob-util",
+        {
+          "CameraPermission": "Allow $(PRODUCT_NAME) to access your camera",
+          "MicrophonePermission": "Allow $(PRODUCT_NAME) to access your microphone",
+          "PhotoLibraryPermission": "Allow $(PRODUCT_NAME) to access your photos",
+          "LocationWhenInUsePermission": "Allow $(PRODUCT_NAME) to access your location",
+          "PhotoLibraryAddPermission": "Allow $(PRODUCT_NAME) to save photos"
+        }
+      ],
+      [
+        "@config-plugins/react-native-pdf",
+        {
+          "package": "@alentoma/react-native-pdf"
+        }
+      ],
+      [
+        "expo-build-properties",
+        {
+          "ios": {
+            "useFrameworks": "static"
+          }
+        }
+      ],
+      [
+        "@stripe/stripe-react-native",
+        {
+          "merchantIdentifier": "",
+          "publishableKey": "pk_test_51N9hXsAUFhzONqTblR3yUfFqL4M2O5qP9j5tV3sN7qR8zL3eK9uA0dJ6gH9sO7rC2tX1zI9fJ0gX3mN00aBcDefGh",
+          "urlScheme": "alara"
+        }
       ]
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "eas": {
+        "projectId": "086e224a-784a-4841-a4f6-d9a3f6ef5e4f"
+      }
+    },
+    "owner": "skolp",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/086e224a-784a-4841-a4f6-d9a3f6ef5e4f"
     }
   }
 }

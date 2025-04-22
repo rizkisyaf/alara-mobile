@@ -9,11 +9,14 @@ import {
   StatusBar,
   Alert,
   ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform
 } from 'react-native';
 import { colors } from '../constants/colors';
 import { typography } from '../constants/typography';
 import { loginUser } from '../api/auth';
 import { useAuth } from '../context/AuthContext';
+import AlaraLogo from '../assets/images/alara-logo.svg';
 
 // TODO: Add navigation prop type if using TypeScript
 // TODO: Implement better global state management for auth status
@@ -58,54 +61,58 @@ function LoginScreen({ navigation }) {
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar barStyle="light-content" backgroundColor={colors.background} />
-      <View style={styles.container}>
-        <Text style={styles.title}>Alara Login</Text>
+      <KeyboardAvoidingView 
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={styles.container}
+      >
+        <View style={styles.innerContainer}>
+          <View style={styles.logoContainer}>
+            <AlaraLogo width={120} height={120} />
+          </View>
 
-        <TextInput
-          style={styles.input}
-          placeholder="Email"
-          placeholderTextColor={colors.text}
-          value={email}
-          onChangeText={setEmail}
-          keyboardType="email-address"
-          autoCapitalize="none"
-          autoCorrect={false}
-          textContentType="emailAddress"
-          editable={!isLoading}
-        />
+          <Text style={styles.title}>Welcome Back</Text>
 
-        <TextInput
-          style={styles.input}
-          placeholder="Password"
-          placeholderTextColor={colors.text}
-          value={password}
-          onChangeText={setPassword}
-          secureTextEntry
-          textContentType="password"
-          editable={!isLoading}
-        />
+          <TextInput
+            style={styles.input}
+            placeholder="Email"
+            placeholderTextColor={colors.textSecondary}
+            value={email}
+            onChangeText={setEmail}
+            keyboardType="email-address"
+            autoCapitalize="none"
+            autoCorrect={false}
+          />
 
-        <TouchableOpacity
-          style={[styles.button, isLoading && styles.buttonDisabled]}
-          onPress={handleLogin}
-          disabled={isLoading}
-        >
-          {isLoading ? (
-            <ActivityIndicator size="small" color={colors.buttonTextPrimary} />
-          ) : (
-            <Text style={styles.buttonText}>Login</Text>
-          )}
-        </TouchableOpacity>
+          <TextInput
+            style={styles.input}
+            placeholder="Password"
+            placeholderTextColor={colors.textSecondary}
+            value={password}
+            onChangeText={setPassword}
+            secureTextEntry
+          />
 
-        <TouchableOpacity
-          onPress={handleGoToSignup}
-          style={styles.linkContainer}
-          disabled={isLoading}
-        >
-          <Text style={[styles.linkText, isLoading && styles.linkTextDisabled]}>Don't have an account? Sign Up</Text>
-        </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.button, isLoading && styles.buttonDisabled]}
+            onPress={handleLogin}
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <ActivityIndicator size="small" color={colors.buttonTextPrimary} />
+            ) : (
+              <Text style={styles.buttonText}>Login</Text>
+            )}
+          </TouchableOpacity>
 
-      </View>
+          <TouchableOpacity
+            onPress={handleGoToSignup}
+            style={styles.linkContainer}
+            disabled={isLoading}
+          >
+            <Text style={[styles.linkText, isLoading && styles.linkTextDisabled]}>Don't have an account? Sign Up</Text>
+          </TouchableOpacity>
+        </View>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
@@ -117,15 +124,24 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
+    backgroundColor: colors.background,
+  },
+  innerContainer: {
+    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: 20,
+    paddingHorizontal: 30,
+  },
+  logoContainer: {
+    marginBottom: 40,
+    alignItems: 'center',
   },
   title: {
     fontSize: typography.fontSizes.h1,
     fontWeight: typography.fontWeights.bold,
     color: colors.text,
     marginBottom: 30,
+    textAlign: 'center',
   },
   input: {
     width: '100%',
