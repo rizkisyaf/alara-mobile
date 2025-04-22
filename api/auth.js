@@ -95,4 +95,48 @@ export const registerUser = async (name, email, password) => {
   }
 };
 
+/**
+ * Fetches the status (verification, subscription) of the currently authenticated user.
+ * @param {string} token - The JWT authentication token.
+ * @returns {Promise<object>} - The user status object from the API (matching UserStatusResponse).
+ * @throws {Error} - Throws an error if the request fails or returns an error status.
+ */
+export const fetchUserStatus = async (token) => {
+  const statusUrl = `${API_BASE_URL}/api/users/me/status`;
+  console.log(`Fetching user status from: ${statusUrl}`);
+
+  if (!token) {
+    throw new Error('Authentication token is required to fetch user status.');
+  }
+
+  try {
+    const response = await fetch(statusUrl, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Accept': 'application/json',
+      },
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      const errorMessage = data.detail || `HTTP error! status: ${response.status}`;
+      console.error('Fetch User Status API error:', errorMessage, 'Status:', response.status);
+      // If unauthorized, maybe the token expired
+      if (response.status === 401 || response.status === 403) {
+        throw new Error('Unauthorized: Invalid or expired token.');
+      }
+      throw new Error(errorMessage);
+    }
+
+    console.log('User status fetched successfully:', data);
+    return data; // Should contain user status details
+
+  } catch (error) {
+    console.error('Fetch user status request failed:', error);
+    throw error instanceof Error ? error : new Error(String(error));
+  }
+};
+
 // TODO: Implement registerUser function after checking backend requirements 

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -6,27 +6,101 @@ import {
   StyleSheet,
   SafeAreaView,
   StatusBar,
-  Alert
+  Alert,
+  ActivityIndicator
 } from 'react-native';
+import { useStripe } from '@stripe/stripe-react-native';
 import { colors } from '../constants/colors';
 import { typography } from '../constants/typography';
 import { useAuth } from '../context/AuthContext'; // Import useAuth for logout
+import { createSubscriptionIntent } from '../api/billing'; // Import the new API function
 
 // TODO: Add navigation prop type if using TypeScript
 function PaywallScreen({ navigation }) {
   const [selectedPlan, setSelectedPlan] = useState(null); // 'monthly' or 'yearly'
-  const { logout } = useAuth(); // Get logout function
+  const [isSubscribing, setIsSubscribing] = useState(false); // Loading state for subscribe button
+  const { logout, authToken, userStatus } = useAuth(); // Get token and userStatus
+  const { initPaymentSheet, presentPaymentSheet } = useStripe(); // Stripe hooks
 
-  const handleSubscribe = () => {
+  // --- Fetch Subscription Intent and Initialize PaymentSheet ---
+  const initializePaymentSheet = async () => {
+    if (!selectedPlan || !authToken) {
+      // Should not happen if button is disabled correctly, but good practice
+      console.log('InitializePaymentSheet: Missing plan or auth token.');
+      return false;
+    }
+
+    setIsSubscribing(true);
+    try {
+      console.log(`Calling createSubscriptionIntent for plan: ${selectedPlan}`);
+      const { client_secret, subscription_id } = await createSubscriptionIntent(authToken, selectedPlan);
+
+      console.log('Initializing Payment Sheet...');
+      const { error } = await initPaymentSheet({
+        // merchantDisplayName: "Alara Example, Inc.", // Optional: Your app name
+        // customerId: customerId, // Optional: Can be pre-filled if you use Ephemeral Keys
+        // customerEphemeralKeySecret: ephemeralKey, // Optional: Needed if using customerId
+        paymentIntentClientSecret: client_secret,
+        // setupIntentClientSecret: client_secret, // Use if it's a SetupIntent
+        // customerId: userStatus?.stripe_customer_id, // This requires ephemeral key
+        allowsDelayedPaymentMethods: false, // Or true if you allow bank transfers etc.
+        returnURL: 'alara://stripe-redirect', // Optional: For specific redirect flows
+        // defaultBillingDetails: { // Optional: Prefill billing details
+        //   name: userStatus?.name,
+        //   email: userStatus?.email,
+        // }
+      });
+
+      if (error) {
+        console.error('Stripe initPaymentSheet error:', error);
+        Alert.alert(`Error initializing payment: ${error.code}`, error.message);
+        setIsSubscribing(false);
+        return false;
+      }
+      console.log('Payment Sheet initialized successfully.');
+      return true; // Indicate success
+
+    } catch (apiError) {
+      console.error('API error creating subscription intent:', apiError);
+      Alert.alert('Error Setting Up Subscription', apiError.message || 'Could not connect to server.');
+      setIsSubscribing(false);
+      return false;
+    }
+  };
+
+  // --- Present PaymentSheet --- 
+  const openPaymentSheet = async () => {
+    console.log('Presenting Payment Sheet...');
+    const { error } = await presentPaymentSheet();
+
+    if (error) {
+      console.log(`Stripe presentPaymentSheet error: ${error.code}`, error.message);
+      if (error.code !== 'Canceled') { // Don't show error if user simply canceled
+          Alert.alert(`Payment Error: ${error.code}`, error.message);
+      }
+    } else {
+      console.log('Payment successful!');
+      Alert.alert('Subscription Activated!', 'Your payment was successful. Welcome to Alara!');
+      // IMPORTANT: The actual subscription status update relies on the backend webhook.
+      // The AuthContext should ideally refetch user status or listen for an update
+      // which will then trigger the AppNavigator to show the Main screen.
+      // For now, the alert provides feedback, but the UI transition depends on context update.
+    }
+    setIsSubscribing(false); // Stop loading after payment sheet interaction
+  };
+
+  // --- Main Subscribe Handler --- 
+  const handleSubscribe = async () => {
     if (!selectedPlan) {
       Alert.alert('Select a Plan', 'Please choose a subscription plan first.');
       return;
     }
-    // TODO: Implement Stripe Payment Flow
-    console.log('Attempting to subscribe to:', selectedPlan);
-    Alert.alert('Subscribe Pressed', `Plan: ${selectedPlan}`); // Placeholder
-    // On success, Stripe webhook should update status, and context should reflect it,
-    // causing AppNavigator to switch to Main screen automatically.
+    
+    const initialized = await initializePaymentSheet();
+    if (initialized) {
+      await openPaymentSheet();
+    }
+    // Loading state is handled within initializePaymentSheet and openPaymentSheet
   };
 
   const handleLogout = async () => {
@@ -50,6 +124,7 @@ function PaywallScreen({ navigation }) {
               selectedPlan === 'monthly' && styles.planOptionSelected,
             ]}
             onPress={() => setSelectedPlan('monthly')}
+            disabled={isSubscribing} // Disable plan selection during subscribe process
           >
             <Text style={styles.planTitle}>Monthly</Text>
             <Text style={styles.planPrice}>$12</Text>
@@ -63,6 +138,7 @@ function PaywallScreen({ navigation }) {
               selectedPlan === 'yearly' && styles.planOptionSelected,
             ]}
             onPress={() => setSelectedPlan('yearly')}
+            disabled={isSubscribing}
           >
              <View style={styles.badgeContainer}> // Badge for Yearly
                 <Text style={styles.badgeText}>SAVE 16%</Text>

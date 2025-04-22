@@ -14,9 +14,11 @@ import MainScreen from '../screens/MainScreen';
 const Stack = createNativeStackNavigator();
 
 function AppNavigator() {
-  const { authToken, isLoading } = useAuth(); // Use the hook
-  // TODO: Add subscription status logic here later
-  const hasActiveSubscription = false; // Placeholder - This needs to come from user state/context
+  const { authToken, isLoading, userStatus } = useAuth(); // Get userStatus from context
+
+  // Determine subscription status based on context state
+  // Default to false if userStatus is null or status isn't 'active'
+  const isSubscribed = userStatus?.subscription_status === 'active';
 
   // Show loading indicator while checking auth status
   if (isLoading) {
@@ -32,11 +34,11 @@ function AppNavigator() {
       <Stack.Navigator screenOptions={{ headerShown: false }}>
         {authToken ? ( // Render based on authToken presence
           // User is logged in
-          hasActiveSubscription ? (
+          isSubscribed ? ( // Use actual subscription status
             // Logged in and Subscribed: Show Main App
             <Stack.Screen name="Main" component={MainScreen} />
           ) : (
-            // Logged in but NOT Subscribed: Show Paywall
+            // Logged in but NOT Subscribed (or status unknown yet): Show Paywall
             <Stack.Screen name="Paywall" component={PaywallScreen} />
           )
         ) : (
