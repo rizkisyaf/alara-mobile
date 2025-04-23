@@ -10,7 +10,8 @@ import {
   ActivityIndicator,
   Alert,
 } from 'react-native';
-import { Colors } from '../constants/Colors';
+import Toast from 'react-native-toast-message';
+import { colors } from '../constants/Colors';
 import { typography } from '../constants/typography';
 import { useAuth } from '../context/AuthContext';
 import { listExchangeKeys, deleteExchangeKey } from '../api/exchanges';
@@ -35,8 +36,13 @@ function ExchangeManagementScreen() {
       setExchanges(fetchedExchanges || []); // Handle null/undefined response
     } catch (err) {
       console.error("Failed to fetch exchanges:", err);
-      setError(err.message || 'Could not load exchanges.');
-      Alert.alert("Error Loading Exchanges", err.message || 'Please try again later.');
+      const message = err.message || 'Could not load exchanges.';
+      setError(message);
+      Toast.show({
+          type: 'error',
+          text1: 'Error Loading Exchanges',
+          text2: message
+      });
     } finally {
       setIsLoading(false);
     }
@@ -63,12 +69,21 @@ function ExchangeManagementScreen() {
             // setIsLoading(true); // Optional: Indicate loading during delete
             try {
               await deleteExchangeKey(authToken, connectionId);
-              Alert.alert("Success", `Connection "${nickname || connectionId}" removed.`);
+              Toast.show({
+                type: 'success',
+                text1: 'Connection Removed',
+                text2: `"${nickname || connectionId}" was removed successfully.`
+              });
               // Refresh the list after deletion
               fetchExchanges(); 
             } catch (err) {
               console.error("Failed to delete exchange:", err);
-              Alert.alert("Error Deleting Exchange", err.message || 'Could not remove connection.');
+              const message = err.message || 'Could not remove connection.';
+              Toast.show({
+                type: 'error',
+                text1: 'Error Deleting Exchange',
+                text2: message
+              });
               // setIsLoading(false); // Stop loading if started
             }
           },
@@ -102,7 +117,7 @@ function ExchangeManagementScreen() {
         style={styles.deleteButton} 
         onPress={() => handleDeleteExchange(item.connection_id, item.nickname)}
       >
-         <Ionicons name="trash-outline" size={24} color={Colors.error} />
+         <Ionicons name="trash-outline" size={24} color={colors.error} />
       </TouchableOpacity>
     </View>
   );
@@ -110,7 +125,7 @@ function ExchangeManagementScreen() {
   // --- Render Logic --- //
   let content;
   if (isLoading) {
-    content = <ActivityIndicator size="large" color={Colors.dark.tint} style={styles.loader} />;
+    content = <ActivityIndicator size="large" color={colors.primary} style={styles.loader} />;
   } else if (error) {
     content = <Text style={styles.errorText}>Error: {error}</Text>;
   } else if (exchanges.length === 0) {
@@ -132,7 +147,7 @@ function ExchangeManagementScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="light-content" backgroundColor={Colors.dark.background} />
+      <StatusBar barStyle="light-content" backgroundColor={colors.background} />
       <View style={styles.container}>
         <View style={styles.header}>
              <Text style={styles.title}>Manage Exchanges</Text>
@@ -161,7 +176,7 @@ function ExchangeManagementScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: Colors.dark.background,
+    backgroundColor: colors.background,
   },
   container: {
     flex: 1,
@@ -175,12 +190,12 @@ const styles = StyleSheet.create({
       paddingTop: 20,
       paddingBottom: 10, // Added padding bottom
       borderBottomWidth: 1,
-      borderBottomColor: Colors.dark.tint, // Use tint for border?
+      borderBottomColor: colors.primary,
   },
   title: {
     fontSize: typography.fontSizes.h2,
     fontWeight: typography.fontWeights.bold,
-    color: Colors.dark.text,
+    color: colors.text,
   },
   contentArea: {
       flex: 1, // Takes up remaining space
@@ -188,7 +203,7 @@ const styles = StyleSheet.create({
   },
   loader: {
       marginTop: 50,
-      color: Colors.dark.tint,
+      color: colors.primary,
   },
   errorText: {
       color: '#FF6B6B',
@@ -203,7 +218,7 @@ const styles = StyleSheet.create({
       paddingHorizontal: 20,
   },
   emptyStateText: {
-      color: Colors.dark.text,
+      color: colors.text,
       fontSize: typography.fontSizes.body,
       opacity: 0.7,
       textAlign: 'center', // Center text
@@ -213,7 +228,7 @@ const styles = StyleSheet.create({
       marginTop: 10,
   },
   itemContainer: {
-    backgroundColor: Colors.dark.background,
+    backgroundColor: colors.background,
     padding: 15,
     marginVertical: 5,
     marginHorizontal: 15, // Add horizontal margin for card effect
@@ -221,7 +236,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    borderColor: Colors.dark.tint,
+    borderColor: colors.primary,
     borderWidth: 1,
   },
   itemDetails: {
@@ -229,13 +244,13 @@ const styles = StyleSheet.create({
       marginRight: 10, // Space before delete button
   },
   itemNickname: {
-    color: Colors.dark.text,
+    color: colors.text,
     fontSize: typography.fontSizes.large,
     fontWeight: typography.fontWeights.medium,
     marginBottom: 3,
   },
   itemExchangeId: {
-      color: Colors.dark.text,
+      color: colors.text,
       fontSize: typography.fontSizes.small,
       opacity: 0.8,
   },
@@ -244,7 +259,7 @@ const styles = StyleSheet.create({
       padding: 5, // Add padding for easier touch
   },
   addButton: {
-    backgroundColor: Colors.dark.tint,
+    backgroundColor: colors.primary,
     paddingVertical: 15,
     borderRadius: 8,
     alignItems: 'center',
@@ -253,7 +268,7 @@ const styles = StyleSheet.create({
     // Removed absolute positioning
   },
   addButtonText: {
-    color: Colors.dark.background,
+    color: colors.background,
     fontSize: typography.fontSizes.large,
     fontWeight: typography.fontWeights.bold,
   },

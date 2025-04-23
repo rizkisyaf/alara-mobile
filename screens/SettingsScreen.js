@@ -7,7 +7,8 @@ import {
   Alert, 
   ActivityIndicator 
 } from 'react-native';
-import { Colors } from '../constants/Colors';
+import Toast from 'react-native-toast-message'; // Import Toast
+import { colors } from '../constants/Colors'; // Corrected import
 import { typography } from '../constants/typography';
 import { useAuth } from '../context/AuthContext'; // Import useAuth
 import { requestPasswordReset } from '../api/auth'; // Import the new API helper
@@ -24,10 +25,19 @@ function SettingsScreen() {
     setIsLoadingReset(true);
     try {
       const response = await requestPasswordReset(user.email);
-      Alert.alert('Password Reset Requested', response.message || 'If an account exists for this email, a password reset link has been sent.');
+      Toast.show({
+        type: 'success',
+        text1: 'Password Reset Requested',
+        text2: response.message || 'If an account exists, a reset link has been sent.'
+      });
     } catch (error) {
       console.error("Failed to request password reset:", error);
-      Alert.alert('Error', error.message || 'Could not request password reset.');
+      const message = error instanceof Error ? error.message : 'Could not request password reset.';
+      Toast.show({
+        type: 'error',
+        text1: 'Password Reset Failed',
+        text2: message
+      });
     } finally {
       setIsLoadingReset(false);
     }
@@ -45,10 +55,20 @@ function SettingsScreen() {
                   onPress: async () => {
                       try {
                           await logout();
+                          Toast.show({
+                              type: 'success',
+                              text1: 'Logged Out',
+                              text2: 'You have been successfully logged out.'
+                          });
                           // Navigation back to Auth screens is handled by AppNavigator automatically
                       } catch (error) {
                           console.error("Logout failed:", error);
-                          Alert.alert("Logout Failed", error.message || "An error occurred during logout.");
+                          const message = error instanceof Error ? error.message : 'An error occurred during logout.';
+                          Toast.show({
+                              type: 'error',
+                              text1: 'Logout Failed',
+                              text2: message
+                          });
                       }
                   }
               }
@@ -82,7 +102,7 @@ function SettingsScreen() {
             disabled={isLoadingReset}
         >
           {isLoadingReset ? (
-              <ActivityIndicator size="small" color={Colors.dark.tint} />
+              <ActivityIndicator size="small" color={colors.primary} />
           ) : (
               <Text style={styles.actionButtonText}>Request Password Reset</Text>
           )}
@@ -107,28 +127,28 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 20,
     paddingTop: 60,
-    backgroundColor: Colors.dark.background,
+    backgroundColor: colors.background,
   },
    title: {
     fontSize: typography.fontSizes.h2,
     fontWeight: typography.fontWeights.bold,
-    color: Colors.dark.text,
+    color: colors.text,
     marginBottom: 30,
     textAlign: 'center',
   },
   sectionContainer: {
       marginBottom: 30,
-      backgroundColor: Colors.dark.card, // Card background
+      backgroundColor: colors.card, // Card background
       borderRadius: 8,
       padding: 15,
   },
   sectionTitle: {
       fontSize: typography.fontSizes.h4,
       fontWeight: typography.fontWeights.medium,
-      color: Colors.dark.text,
+      color: colors.text,
       marginBottom: 15,
       borderBottomWidth: 1,
-      borderBottomColor: Colors.dark.tint,
+      borderBottomColor: colors.primary,
       paddingBottom: 5,
   },
   infoRow: {
@@ -138,12 +158,12 @@ const styles = StyleSheet.create({
   },
   infoLabel: {
       fontSize: typography.fontSizes.body,
-      color: Colors.dark.textSecondary,
+      color: colors.textSecondary,
       marginRight: 10,
   },
   infoValue: {
       fontSize: typography.fontSizes.body,
-      color: Colors.dark.text,
+      color: colors.text,
       fontWeight: typography.fontWeights.regular,
       flexShrink: 1, // Allow text to wrap if long
       textAlign: 'right',
@@ -158,20 +178,20 @@ const styles = StyleSheet.create({
   actionButton: {
       backgroundColor: 'transparent', // Use background from card
       borderWidth: 1,
-      borderColor: Colors.dark.tint,
+      borderColor: colors.primary,
       marginBottom: 10, // Space between actions
   },
   actionButtonText: {
-      color: Colors.dark.tint,
+      color: colors.primary,
       fontSize: typography.fontSizes.body,
       fontWeight: typography.fontWeights.medium,
   },
   logoutButton: {
-      backgroundColor: Colors.errorBackground || '#ffebee', // Error-like background
+      backgroundColor: colors.errorBackground || '#ffebee', // Error-like background
       marginTop: 20, // Space from sections above
   },
   logoutButtonText: {
-      color: Colors.error || '#b71c1c',
+      color: colors.error || '#b71c1c',
       fontSize: typography.fontSizes.large,
       fontWeight: typography.fontWeights.bold,
   },

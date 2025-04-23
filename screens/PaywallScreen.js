@@ -7,10 +7,12 @@ import {
   SafeAreaView,
   StatusBar,
   Alert,
-  ActivityIndicator
+  ActivityIndicator,
+  ScrollView
 } from 'react-native';
+import Toast from 'react-native-toast-message'; // Import Toast
 import { useStripe } from '@stripe/stripe-react-native';
-import { Colors } from '../constants/Colors';
+import { colors } from '../constants/Colors';
 import { typography } from '../constants/typography';
 import { useAuth } from '../context/AuthContext'; // Import useAuth for logout
 import { createSubscriptionIntent } from '../api/billing'; // Import the new API function
@@ -53,7 +55,12 @@ function PaywallScreen({ navigation }) {
 
       if (error) {
         console.error('Stripe initPaymentSheet error:', error);
-        Alert.alert(`Error initializing payment: ${error.code}`, error.message);
+        // Alert.alert(`Error initializing payment: ${error.code}`, error.message);
+        Toast.show({
+          type: 'error',
+          text1: 'Payment Setup Failed',
+          text2: `Error: ${error.code}. ${error.message}`
+        });
         setIsSubscribing(false);
         return false;
       }
@@ -62,7 +69,13 @@ function PaywallScreen({ navigation }) {
 
     } catch (apiError) {
       console.error('API error creating subscription intent:', apiError);
-      Alert.alert('Error Setting Up Subscription', apiError.message || 'Could not connect to server.');
+      // Alert.alert('Error Setting Up Subscription', apiError.message || 'Could not connect to server.');
+      const message = apiError instanceof Error ? apiError.message : 'Could not connect to server.';
+      Toast.show({
+          type: 'error',
+          text1: 'Subscription Setup Failed',
+          text2: message
+      });
       setIsSubscribing(false);
       return false;
     }
@@ -76,15 +89,24 @@ function PaywallScreen({ navigation }) {
     if (error) {
       console.log(`Stripe presentPaymentSheet error: ${error.code}`, error.message);
       if (error.code !== 'Canceled') { // Don't show error if user simply canceled
-          Alert.alert(`Payment Error: ${error.code}`, error.message);
+          // Alert.alert(`Payment Error: ${error.code}`, error.message);
+          Toast.show({
+            type: 'error',
+            text1: 'Payment Failed',
+            text2: `Error: ${error.code}. ${error.message}`
+          });
       }
     } else {
       console.log('Payment successful!');
-      Alert.alert('Subscription Activated!', 'Your payment was successful. Welcome to Alara!');
-      // IMPORTANT: The actual subscription status update relies on the backend webhook.
-      // The AuthContext should ideally refetch user status or listen for an update
-      // which will then trigger the AppNavigator to show the Main screen.
-      // For now, the alert provides feedback, but the UI transition depends on context update.
+      // Alert.alert('Subscription Activated!', 'Your payment was successful. Welcome to Alara!');
+      Toast.show({
+        type: 'success',
+        text1: 'Payment Successful!',
+        text2: 'Your subscription is being activated.'
+        // Visibility time can be adjusted if needed
+        // visibilityTime: 4000 
+      });
+      // IMPORTANT: Actual status update relies on backend webhook + AuthContext refresh.
     }
     setIsSubscribing(false); // Stop loading after payment sheet interaction
   };
@@ -92,6 +114,7 @@ function PaywallScreen({ navigation }) {
   // --- Main Subscribe Handler --- 
   const handleSubscribe = async () => {
     if (!selectedPlan) {
+      // Keep Alert for immediate client-side validation feedback
       Alert.alert('Select a Plan', 'Please choose a subscription plan first.');
       return;
     }
@@ -109,9 +132,9 @@ function PaywallScreen({ navigation }) {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="light-content" backgroundColor={Colors.dark.background} />
-      <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
+      <StatusBar barStyle="light-content" backgroundColor={colors.background} />
+      <ScrollView contentContainerStyle={styles.scrollContainer}>
         <Text style={styles.title}>Unlock Alara Access</Text>
         <Text style={styles.subtitle}>Choose your plan to continue:</Text>
 
@@ -169,32 +192,30 @@ function PaywallScreen({ navigation }) {
           <Text style={styles.logoutButtonText}>Logout</Text>
         </TouchableOpacity>
 
-      </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: Colors.dark.background,
-  },
   container: {
     flex: 1,
-    paddingTop: 40, // Add padding at the top
-    paddingHorizontal: 20,
-    alignItems: 'center',
+    backgroundColor: colors.background,
+  },
+  scrollContainer: {
+    padding: 20,
+    paddingBottom: 40,
   },
   title: {
     fontSize: typography.fontSizes.h1,
     fontWeight: typography.fontWeights.bold,
-    color: Colors.dark.text,
+    color: colors.text,
     marginBottom: 10,
     textAlign: 'center',
   },
   subtitle: {
     fontSize: typography.fontSizes.large,
-    color: Colors.dark.text,
+    color: colors.text,
     marginBottom: 30,
     textAlign: 'center',
   },
@@ -206,44 +227,44 @@ const styles = StyleSheet.create({
   },
   planOption: {
     borderWidth: 2,
-    borderColor: Colors.dark.tint,
+    borderColor: colors.tint,
     borderRadius: 10,
     padding: 20,
     alignItems: 'center',
     width: '45%', // Adjust width for spacing
-    backgroundColor: Colors.dark.card, // Use card background
+    backgroundColor: colors.card, // Use card background
   },
   planOptionSelected: {
-    borderColor: Colors.dark.tint, // Highlight selected plan (using accent/primary)
+    borderColor: colors.tint, // Highlight selected plan (using accent/primary)
     backgroundColor: '#222', // Slightly lighter background when selected
   },
   planTitle: {
     fontSize: typography.fontSizes.h4,
     fontWeight: typography.fontWeights.semiBold,
-    color: Colors.dark.text,
+    color: colors.text,
     marginBottom: 5,
   },
   planPrice: {
     fontSize: typography.fontSizes.h2,
     fontWeight: typography.fontWeights.bold,
-    color: Colors.dark.text,
+    color: colors.text,
     marginBottom: 2,
   },
   planFrequency: {
     fontSize: typography.fontSizes.small,
-    color: Colors.dark.text, // Slightly dimmer text
+    color: colors.text, // Slightly dimmer text
     marginBottom: 5,
   },
   planEquivalent: {
     fontSize: typography.fontSizes.small,
-    color: Colors.success, // Use success color
+    color: colors.success, // Use success color
     marginTop: 5,
   },
   badgeContainer: {
       position: 'absolute',
       top: -12, // Adjust position
       // right: -10,
-      backgroundColor: Colors.success, // Badge color
+      backgroundColor: colors.success, // Badge color
       paddingHorizontal: 8,
       paddingVertical: 3,
       borderRadius: 12, // Pill shape
@@ -257,18 +278,18 @@ const styles = StyleSheet.create({
   button: {
     width: '100%',
     height: 50,
-    backgroundColor: Colors.dark.tint,
+    backgroundColor: colors.tint,
     justifyContent: 'center',
     alignItems: 'center',
     borderRadius: 8,
     marginTop: 10,
   },
   buttonDisabled: {
-    backgroundColor: Colors.dark.text,
+    backgroundColor: colors.textSecondary,
     opacity: 0.5,
   },
   buttonText: {
-    color: Colors.dark.background,
+    color: colors.background,
     fontSize: typography.fontSizes.large,
     fontWeight: typography.fontWeights.bold,
   },
@@ -278,7 +299,7 @@ const styles = StyleSheet.create({
     // alignSelf: 'center', // Center if needed
   },
   logoutButtonText: {
-    color: Colors.error, // Use error color for logout
+    color: colors.error, // Use error color for logout
     fontSize: typography.fontSizes.medium,
   },
   // Link styles if needed later

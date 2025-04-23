@@ -10,15 +10,16 @@ import {
   Alert,
   ActivityIndicator,
   KeyboardAvoidingView,
-  Platform
+  Platform,
+  Image
 } from 'react-native';
-// Fix import casing and usage
-import { Colors } from '../constants/Colors';
+import { colors } from '../constants/Colors';
 import { typography } from '../constants/typography';
 import { registerUser } from '../api/auth';
-import AlaraLogo from '../assets/images/alara-logo.svg';
+import alaraLogoSource from '../assets/images/alara-logo.png';
 import { useAuth } from '../context/AuthContext';
 import { useRouter } from 'expo-router';
+import Toast from 'react-native-toast-message';
 
 function SignupScreen() {
   const [name, setName] = useState('');
@@ -46,18 +47,33 @@ function SignupScreen() {
 
     setIsLoading(true);
     try {
-      await signup(email, password, name);
-      Alert.alert(
-        'Signup Successful',
-        'Please check your email to verify your account before logging in.',
-        [{ text: 'OK', onPress: () => router.replace('/(auth)/login') }]
-      );
+      const response = await registerUser(name, email, password);
+
+      // Show success Toast
+      Toast.show({
+        type: 'success',
+        text1: 'Signup Successful',
+        text2: response.message || 'Please check your email to verify your account.'
+      });
+
+      // Clear form and navigate after success
       setName('');
       setEmail('');
       setPassword('');
       setConfirmPassword('');
+      // Navigate to login after a short delay to allow Toast to be seen
+      setTimeout(() => {
+          router.replace('/(auth)/login');
+      }, 1500); // 1.5 seconds delay
+
     } catch (error) {
-      Alert.alert('Signup Failed', error.message || 'An unexpected error occurred.');
+      // Show error Toast
+      const message = error instanceof Error ? error.message : 'An unexpected error occurred.';
+      Toast.show({
+        type: 'error',
+        text1: 'Signup Failed',
+        text2: message
+      });
     } finally {
       setIsLoading(false);
     }
@@ -74,7 +90,11 @@ function SignupScreen() {
     >
       <View style={styles.innerContainer}>
         <View style={styles.logoContainer}>
-          <AlaraLogo width={120} height={120} />
+          <Image 
+            source={alaraLogoSource} 
+            style={styles.logo}
+            resizeMode="contain"
+          />
         </View>
 
         <Text style={styles.title}>Create Account</Text>
@@ -82,7 +102,7 @@ function SignupScreen() {
         <TextInput
           style={styles.input}
           placeholder="Name"
-          placeholderTextColor={Colors.dark.tint}
+          placeholderTextColor={colors.textSecondary}
           value={name}
           onChangeText={setName}
           autoCapitalize="words"
@@ -91,7 +111,7 @@ function SignupScreen() {
         <TextInput
           style={styles.input}
           placeholder="Email"
-          placeholderTextColor={Colors.dark.tint}
+          placeholderTextColor={colors.textSecondary}
           value={email}
           onChangeText={setEmail}
           keyboardType="email-address"
@@ -102,7 +122,7 @@ function SignupScreen() {
         <TextInput
           style={styles.input}
           placeholder="Password (min 8 characters)"
-          placeholderTextColor={Colors.dark.tint}
+          placeholderTextColor={colors.textSecondary}
           value={password}
           onChangeText={setPassword}
           secureTextEntry
@@ -111,7 +131,7 @@ function SignupScreen() {
         <TextInput
           style={styles.input}
           placeholder="Confirm Password"
-          placeholderTextColor={Colors.dark.tint}
+          placeholderTextColor={colors.textSecondary}
           value={confirmPassword}
           onChangeText={setConfirmPassword}
           secureTextEntry
@@ -123,7 +143,7 @@ function SignupScreen() {
           disabled={isLoading}
         >
           {isLoading ? (
-            <ActivityIndicator size="small" color={Colors.dark.background} />
+            <ActivityIndicator size="small" color={colors.background} />
           ) : (
             <Text style={styles.buttonText}>Sign Up</Text>
           )}
@@ -144,7 +164,7 @@ function SignupScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.dark.background,
+    backgroundColor: colors.background,
   },
   innerContainer: {
     flex: 1,
@@ -156,20 +176,24 @@ const styles = StyleSheet.create({
     marginBottom: 40,
     alignItems: 'center',
   },
+  logo: {
+    width: 120,
+    height: 120,
+  },
   title: {
     fontSize: typography.fontSizes.h1,
     fontWeight: typography.fontWeights.bold,
-    color: Colors.dark.text,
+    color: colors.text,
     marginBottom: 30,
     textAlign: 'center',
   },
   input: {
     width: '100%',
     height: 50,
-    backgroundColor: Colors.dark.background,
-    color: Colors.dark.text,
+    backgroundColor: colors.background,
+    color: colors.text,
     borderWidth: 1,
-    borderColor: Colors.dark.tint,
+    borderColor: colors.primary,
     borderRadius: 8,
     paddingHorizontal: 15,
     marginBottom: 15,
@@ -178,18 +202,18 @@ const styles = StyleSheet.create({
   button: {
     width: '100%',
     height: 50,
-    backgroundColor: Colors.dark.tint,
+    backgroundColor: colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
     borderRadius: 8,
     marginTop: 10,
   },
   buttonDisabled: {
-    backgroundColor: Colors.dark.text,
+    backgroundColor: colors.text,
     opacity: 0.7,
   },
   buttonText: {
-    color: Colors.dark.background,
+    color: colors.buttonTextPrimary,
     fontSize: typography.fontSizes.large,
     fontWeight: typography.fontWeights.bold,
   },
@@ -197,7 +221,7 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   linkText: {
-    color: Colors.dark.tint,
+    color: colors.primary,
     fontSize: typography.fontSizes.medium,
   },
   linkTextDisabled: {

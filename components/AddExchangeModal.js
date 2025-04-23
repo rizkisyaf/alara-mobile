@@ -12,7 +12,8 @@ import {
   Platform,
   ScrollView
 } from 'react-native';
-import { colors } from '../constants/colors';
+import Toast from 'react-native-toast-message';
+import { colors } from '../constants/Colors';
 import { typography } from '../constants/typography';
 import { useAuth } from '../context/AuthContext';
 import { addExchangeKey } from '../api/exchanges';
@@ -52,14 +53,24 @@ function AddExchangeModal({ isVisible, onClose, onSaveSuccess }) {
       
       await addExchangeKey(authToken, exchangeId.trim(), credentials);
       
-      Alert.alert('Success', `Exchange connection "${nickname || exchangeId}" added successfully!`);
+      Toast.show({
+          type: 'success',
+          text1: 'Connection Added',
+          text2: `"${nickname || exchangeId}" added successfully!`
+      });
+
       resetForm();
       onSaveSuccess(); // Callback to refresh list in parent
       onClose(); // Close the modal
 
     } catch (error) {
       console.error("Failed to add exchange key:", error);
-      Alert.alert('Error Adding Exchange', error.message || 'Could not save connection. Please check details and try again.');
+      const message = error.message || 'Could not save connection. Please check details and try again.';
+      Toast.show({
+          type: 'error',
+          text1: 'Error Adding Exchange',
+          text2: message
+      });
       setIsLoading(false); // Ensure loading stops on error
     }
     // No finally block needed for setIsLoading(false) because it's done on error and resetForm clears it on success

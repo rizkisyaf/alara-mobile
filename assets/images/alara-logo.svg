@@ -1,7 +1,0 @@
-<!-- Option 1 Revised: Abstract with Subtle Hints -->
-<svg fill="#c0c0c0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
-  <!-- 'T' Shard: Flatter top edge, primary upward thrust -->
-  <path d="M 15 90 L 45 20 L 55 20 L 25 100 Z" />
-  <!-- 'F' Shard: Interlocks with T's top, angles up-left -->
-  <path d="M 55 20 L 85 90 L 75 100 L 45 30 Z" opacity="0.85" />
-</svg>

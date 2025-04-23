@@ -1,6 +1,7 @@
 export const colors = {
   background: '#0c0c0c',
   text: '#c0c0c0', // foreground
+  textSecondary: '#888888', // Define a subtle grey for placeholders
   primary: '#c0c0c0',
   secondary: '#c0c0c0', // Same as primary in portal theme
   accent: '#c0c0c0', // Using primary as fallback

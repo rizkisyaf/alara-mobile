@@ -21,25 +21,41 @@ export const loginUser = async (email, password) => {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
+        'Accept': 'application/json', // Indicate we prefer JSON responses
       },
       body: formData.toString(),
     });
 
-    const data = await response.json();
-
+    // Check if the request was successful FIRST
     if (!response.ok) {
-      // Throw an error with the message from the API if available
-      const errorMessage = data.detail || `HTTP error! status: ${response.status}`;
+      let errorMessage = `HTTP error! status: ${response.status}`;
+      // Try to parse error detail if response seems like JSON, otherwise use status
+      try {
+        const errorData = await response.json();
+        errorMessage = errorData.detail || errorMessage;
+      } catch (parseError) {
+        // If parsing fails, stick with the HTTP status error message
+        console.warn('Could not parse error response body as JSON.');
+      }
       console.error('Login API error:', errorMessage, 'Status:', response.status);
-      throw new Error(errorMessage);
+      throw new Error(errorMessage); // Throw error with API message or status
     }
 
+    // If response.ok is true, *then* parse the JSON body
+    const data = await response.json();
     console.log('Login successful, token received.');
     return data; // Should contain access_token and token_type
+
   } catch (error) {
     console.error('Login request failed:', error);
-    // Re-throw the error to be caught by the calling component
-    throw error; 
+    // Check if it's the error we threw above or a network/fetch error
+    if (error instanceof Error) {
+        // Re-throw the specific error (could be the one from !response.ok or a network error)
+        throw error;
+    } else {
+        // Handle unexpected error types
+        throw new Error('An unexpected error occurred during login.');
+    }
   }
 };
 

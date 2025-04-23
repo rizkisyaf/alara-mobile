@@ -1,148 +1,182 @@
 import { useFonts } from 'expo-font';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
-import { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import 'react-native-reanimated';
 import { StatusBar } from 'expo-status-bar';
 import { ActivityIndicator, View, StyleSheet } from 'react-native';
 import { StripeProvider } from '@stripe/stripe-react-native';
 import { MenuProvider } from 'react-native-popup-menu';
+import Toast from 'react-native-toast-message';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { BaseToastProps } from 'react-native-toast-message';
 
 import { AuthProvider, useAuth } from '@/context/AuthContext'; // Adjust path if needed
 import stripeConfig from '@/config/stripe'; // Adjust path if needed
-import { Colors } from '@/constants/Colors'; // Adjust path if needed
+import { colors } from '@/constants/Colors'; // Adjust path if needed
+// Import custom toast components
+import { SuccessToast, ErrorToast } from '@/components/toast/CustomToast'; // Adjust path if needed
 
-// Prevent the splash screen from auto-hiding before asset loading is complete.
+// Prevent the splash screen from auto-hiding.
 SplashScreen.preventAutoHideAsync();
 
+// Define the toast config with explicit types
+const toastConfig = {
+  success: (props: BaseToastProps) => <SuccessToast {...props} />,
+  error: (props: BaseToastProps) => <ErrorToast {...props} />,
+  /*
+    Optionally override other types or define custom types:
+    info: (props) => <InfoToast {...props} />,
+    any_custom_type: (props) => <CustomToast {...props} />
+  */
+};
+
 const InitialLayout = () => {
-  console.log('--- InitialLayout Render ---'); // Log render
-  const auth = useAuth(); // Get the whole context first
+  console.log('--- InitialLayout Render ---');
+  const auth = useAuth();
   const segments = useSegments();
   const router = useRouter();
+
+  // Add state for onboarding check
+  const [isOnboardingLoading, setIsOnboardingLoading] = useState(true);
+  const [showOnboarding, setShowOnboarding] = useState(false);
 
   // Add a check for auth context existence
   if (!auth) {
      console.warn('Auth context not available yet in InitialLayout');
      return (
         <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color={Colors.dark.tint} />
+            <ActivityIndicator size="large" color={colors.primary} />
         </View>
      );
   }
 
-  // Now destructure safely
-  const { authToken, isLoading, userStatus } = auth;
-  console.log(`InitialLayout State: isLoading=${isLoading}, authToken=${!!authToken}`); // Log state
+  const { authToken, isLoading: isAuthLoading, userStatus } = auth;
+  console.log(`InitialLayout State: isAuthLoading=${isAuthLoading}, isOnboardingLoading=${isOnboardingLoading}, authToken=${!!authToken}`);
 
   useEffect(() => {
-    console.log('--- InitialLayout useEffect Triggered ---'); // Log effect trigger
-    // Wait until loading is finished
-    if (isLoading) {
-        console.log('useEffect: Still loading auth state, returning...');
-        return;
-    }
-    console.log('useEffect: Auth state loaded.');
+    const checkAppStatusAndNavigate = async () => {
+      console.log('--- checkAppStatusAndNavigate useEffect Triggered ---');
 
-    // Cast segment to string for comparison to satisfy linter
-    const currentSegment = String(segments[0]);
-    const inAuthGroup = currentSegment === '(auth)';
-    const inAppGroup = currentSegment === '(tabs)';
+      // 1. Check Onboarding Status
+      let onboardingComplete = false;
+      try {
+        const storedStatus = await AsyncStorage.getItem('onboardingComplete');
+        onboardingComplete = storedStatus === 'true';
+        setShowOnboarding(!onboardingComplete);
+        console.log('Onboarding check complete. Value:', storedStatus, ', Show onboarding:', !onboardingComplete);
+      } catch (e) {
+        console.error("Failed to load onboarding status:", e);
+        setShowOnboarding(true); // Default to show onboarding on error
+      } finally {
+        setIsOnboardingLoading(false);
+      }
 
-    // Use type assertion for userStatus temporarily
-    const subscriptionStatus = (userStatus as any)?.subscription_status;
-    console.log(`useEffect Check: authToken=${!!authToken}, status=${subscriptionStatus}, currentSegment=${currentSegment}`);
+      // 2. Wait until auth is also loaded
+      if (isAuthLoading) {
+          console.log('Auth state still loading, waiting...');
+          return; // Exit effect if auth isn't loaded yet
+      }
 
-    if (authToken) {
-      console.log('useEffect: User is authenticated.');
-      // User is authenticated
-      if (subscriptionStatus === 'active' || subscriptionStatus === 'trialing') {
-        console.log('useEffect: User is subscribed/trialing.');
-        // User is subscribed or trialing, navigate to main app
-        if (!inAppGroup) {
+      // 3. Both checks are done, hide splash screen
+      console.log('Auth & Onboarding checks complete. Hiding splash screen.');
+      await SplashScreen.hideAsync();
+
+      // 4. Perform Routing Logic
+      console.log('Performing routing logic...');
+      const currentSegment = String(segments[0]);
+      const inAuthGroup = currentSegment === '(auth)';
+      const inAppGroup = currentSegment === '(tabs)';
+      const inOnboarding = currentSegment === 'onboarding';
+      const subscriptionStatus = (userStatus as any)?.subscription_status;
+
+      if (!onboardingComplete) {
+        // Needs onboarding
+        if (!inOnboarding) {
+            console.log('>>> Redirecting to /onboarding...');
+            router.replace('/onboarding' as any);
+        }
+      } else if (authToken) {
+        // Onboarding done, user is authenticated
+        if (subscriptionStatus === 'active' || subscriptionStatus === 'trialing') {
+          // Subscribed/Trialing -> App
+          if (!inAppGroup) {
             console.log('>>> Redirecting to (tabs)...');
-             // Use type assertion for route temporarily
-            router.replace('/(tabs)/' as any);
+            router.replace('/(tabs)' as any);
+          }
+        } else {
+          // Not Subscribed -> Paywall
+          if (currentSegment !== 'paywall') {
+            console.log('>>> Redirecting to /paywall...');
+            router.replace('/paywall' as any);
+          }
         }
       } else {
-        console.log('useEffect: User NOT subscribed/trialing.');
-        // User is authenticated but not subscribed, navigate to paywall
-        // Check if already on paywall to prevent loop
-        // Cast segment to string for comparison
-        if (currentSegment !== 'paywall') {
-            console.log('>>> Redirecting to /paywall...');
-             // Use type assertion for route temporarily
-            router.replace('/paywall' as any);
+        // Onboarding done, user NOT authenticated -> Auth
+        if (!inAuthGroup) {
+          console.log('>>> Redirecting to /login...');
+          router.replace('/(auth)/login' as any);
         }
       }
-    } else {
-      console.log('useEffect: User is NOT authenticated.');
-      // User is not authenticated, navigate to auth flow
-      if (!inAuthGroup) {
-          console.log('>>> Redirecting to /login...');
-           // Use type assertion for route temporarily
-          router.replace('/(auth)/login' as any);
-      }
-    }
-  }, [isLoading, authToken, userStatus, segments, router]);
+    };
 
-  if (isLoading) {
-    console.log('InitialLayout: Rendering loading indicator because isLoading is true.');
-    // Optionally return a loading spinner or splash screen component
-    return (
-        <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color={Colors.dark.tint} />
-        </View>
-    );
-  }
+    checkAppStatusAndNavigate();
 
-  console.log('InitialLayout: Rendering Stack because isLoading is false.');
-  // This layout component renders the stack navigator defined below
+  }, [isAuthLoading, authToken, userStatus, segments, router]); // Rerun when auth state changes or navigation potentially changes
+
+  // Render Stack only after checks are done AND splash screen is hidden
+  // While checks run, RootLayout shows loading/null, splash stays visible
+  // We return Stack immediately here, the useEffect handles redirection
+  console.log('InitialLayout: Rendering Stack Navigator.');
   return (
-      <Stack screenOptions={{ headerShown: false }}>
+      <Stack screenOptions={{
+          headerShown: false,
+          animation: 'fade', // Use fade animation for smoother transitions
+          animationDuration: 250, // Adjust duration as needed (default is ~350ms)
+      }}>
           <Stack.Screen name="(tabs)" />
           <Stack.Screen name="(auth)" />
           <Stack.Screen name="paywall" />
-          {/* Add other modal screens or full-screen routes outside tabs/auth here if needed */}
+          <Stack.Screen name="onboarding" />{/* Add onboarding route */}
           <Stack.Screen name="+not-found" />
       </Stack>
   );
 };
 
 export default function RootLayout() {
-  // Load custom fonts (optional)
   const [loaded, error] = useFonts({
     // SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
     // Add other fonts here
   });
 
-  // Expo Router uses Error Boundaries to catch errors in the navigation tree.
   useEffect(() => {
     if (error) throw error;
   }, [error]);
 
-  useEffect(() => {
-    if (loaded) {
-      SplashScreen.hideAsync();
-    }
-  }, [loaded]);
+  // Remove splash screen hiding based on font loading
+  // useEffect(() => {
+  //   if (loaded) {
+  //     SplashScreen.hideAsync();
+  //   }
+  // }, [loaded]);
 
-  if (!loaded && !error) { // Show loading indicator until fonts load OR an error occurs
+  // Show loading indicator only while fonts are loading
+  if (!loaded && !error) {
      return (
         <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color={Colors.dark.tint} />
+            <ActivityIndicator size="large" color={colors.primary} />
         </View>
     );
   }
 
+  // Fonts are loaded, render the rest
   return (
     <AuthProvider>
       <StripeProvider publishableKey={stripeConfig.publishableKey}>
         <MenuProvider>
-           {/* The InitialLayout component handles the actual navigation stack based on auth */}
            <InitialLayout />
-           {/* Set status bar style globally */}
            <StatusBar style="light" />
+           <Toast config={toastConfig} />
         </MenuProvider>
       </StripeProvider>
     </AuthProvider>
@@ -153,7 +187,7 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: Colors.dark.background,
+        backgroundColor: colors.background,
     }
 });
 

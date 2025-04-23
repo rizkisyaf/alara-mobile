@@ -1,8 +1,8 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { StyleSheet, KeyboardAvoidingView, Platform, View, ActivityIndicator, Text, TouchableOpacity, StatusBar, Alert } from 'react-native';
+import { StyleSheet, Platform, View, ActivityIndicator, Text, TouchableOpacity, StatusBar, Alert } from 'react-native';
 import { GiftedChat, InputToolbar, Send, Bubble } from 'react-native-gifted-chat';
 import { SafeAreaView } from 'react-native-safe-area-context'; // Use edges prop
-import { Colors } from '../constants/Colors';
+import { colors } from '../constants/Colors';
 import { typography } from '../constants/typography';
 import { useAuth } from '../context/AuthContext';
 import { sendMessage } from '../api/chat';
@@ -14,6 +14,7 @@ import {
   MenuOption,
   MenuTrigger,
 } from 'react-native-popup-menu'; // Added
+import Toast from 'react-native-toast-message'; // Import Toast
 import Voice from '@react-native-voice/voice';
 import Ionicons from '@expo/vector-icons/Ionicons'; // Import Ionicons
 
@@ -66,7 +67,12 @@ function MainScreen() {
       console.log('onSpeechError: ', e);
       setVoiceError(JSON.stringify(e.error));
       setIsRecording(false); // Stop recording state on error
-      Alert.alert('Voice Recognition Error', e.error?.message || 'An unknown error occurred.');
+      const message = e.error?.message || 'An unknown voice error occurred.';
+      Toast.show({
+          type: 'error',
+          text1: 'Voice Recognition Error',
+          text2: message
+      });
     };
     const onSpeechResults = (e) => {
       console.log('onSpeechResults: ', e);
@@ -186,6 +192,12 @@ function MainScreen() {
       setMessages((previousMessages) =>
         GiftedChat.append(previousMessages, errorMessage)
       );
+      // Also show a Toast for more visibility
+      Toast.show({
+          type: 'error',
+          text1: 'Message Error',
+          text2: error.message || 'Failed to send or receive message.'
+      });
        // TODO: Consider specific error handling, e.g., logout on 401
        if (error.message.includes('Unauthorized')) {
            // Optionally trigger logout or prompt re-login
@@ -216,7 +228,7 @@ function MainScreen() {
             <Ionicons 
                 name={isRecording ? "stop-circle-outline" : "mic-outline"} 
                 size={28} 
-                color={isRecording ? Colors.error : Colors.dark.tint} // Example: Red when recording
+                color={isRecording ? colors.error : colors.primary} // Use colors.error / colors.primary (assuming tint was primary)
             /> 
          </TouchableOpacity>
       )}
@@ -334,7 +346,7 @@ function MainScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.dark.background,
+    backgroundColor: colors.background,
   },
   headerContainer: {
     flexDirection: 'row',
@@ -343,14 +355,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 15,
     paddingTop: Platform.OS === 'ios' ? 10 : (StatusBar.currentHeight || 0) + 10,
     paddingBottom: 10,
-    backgroundColor: Colors.dark.background,
+    backgroundColor: colors.background,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.dark.tint,
+    borderBottomColor: colors.primary,
   },
   headerTitle: {
     fontSize: typography.fontSizes.h3,
     fontWeight: typography.fontWeights.medium,
-    color: Colors.dark.text,
+    color: colors.text,
     textAlign: 'center',
     flex: 2,
   },
@@ -368,11 +380,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   messagesContainer: {
-    backgroundColor: Colors.dark.background,
+    backgroundColor: colors.background,
     paddingBottom: 10,
   },
   inputToolbar: {
-    backgroundColor: Colors.dark.card,
+    backgroundColor: colors.card,
     borderTopWidth: 0,
     paddingVertical: 8,
     paddingHorizontal: 10,
@@ -403,7 +415,7 @@ const styles = StyleSheet.create({
     // backgroundColor: colors.secondary, 
   },
   bubbleLeft: {
-    backgroundColor: Colors.dark.card,
+    backgroundColor: colors.card,
     borderTopLeftRadius: 0,
     borderTopRightRadius: 15,
     borderBottomLeftRadius: 15,
@@ -412,7 +424,7 @@ const styles = StyleSheet.create({
     marginBottom: 5,
   },
   bubbleRight: {
-    backgroundColor: Colors.dark.tint,
+    backgroundColor: colors.primary,
     borderTopLeftRadius: 15,
     borderTopRightRadius: 0,
     borderBottomLeftRadius: 15,
@@ -421,16 +433,16 @@ const styles = StyleSheet.create({
     marginBottom: 5,
   },
   bubbleTextLeft: {
-    color: Colors.dark.text,
+    color: colors.text,
     fontSize: typography.fontSizes.body,
   },
   bubbleTextRight: {
-    color: Colors.dark.background,
+    color: colors.buttonTextPrimary,
     fontSize: typography.fontSizes.body,
   },
   // --- NEW Error Bubble Styles --- //
   bubbleError: {
-    backgroundColor: Colors.errorBackground || '#ffebee', // Use theme error bg or fallback
+    backgroundColor: colors.errorBackground || '#ffebee', // Use colors.*
     borderTopLeftRadius: 0,
     borderTopRightRadius: 15,
     borderBottomLeftRadius: 15,
@@ -439,7 +451,7 @@ const styles = StyleSheet.create({
     marginBottom: 5,
   },
   bubbleTextError: {
-      color: Colors.error || '#b71c1c', // Use theme error color or fallback
+      color: colors.error || '#b71c1c', // Use colors.*
       fontSize: typography.fontSizes.body,
   },
   // --- End Error Bubble Styles --- //
@@ -452,14 +464,14 @@ const styles = StyleSheet.create({
   footerText: {
     marginLeft: 10,
     fontSize: typography.fontSizes.small,
-    color: Colors.dark.textSecondary,
+    color: colors.textSecondary,
   },
 });
 
 // Custom styles for MenuOptions
 const menuOptionsStyles = {
   optionsContainer: {
-    backgroundColor: Colors.dark.card,
+    backgroundColor: colors.card,
     borderRadius: 8,
     padding: 5,
     marginTop: 35,
@@ -468,7 +480,7 @@ const menuOptionsStyles = {
     padding: 10,
   },
   optionText: {
-    color: Colors.dark.text,
+    color: colors.text,
     fontSize: typography.fontSizes.body,
   },
 };

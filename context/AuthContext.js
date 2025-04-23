@@ -1,7 +1,7 @@
 import React, { createContext, useState, useEffect, useContext, useCallback } from 'react';
 import * as SecureStore from 'expo-secure-store';
 import { ActivityIndicator, View, StyleSheet } from 'react-native';
-import { colors } from '../constants/colors';
+import { colors } from '../constants/Colors';
 import { fetchUserStatus } from '../api/auth';
 
 // 1. Create Context

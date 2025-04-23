@@ -1,5 +1,5 @@
 import { ActivityIndicator, StyleSheet, View } from "react-native";
-import { Colors } from '@/constants/Colors';
+import { colors } from '@/constants/Colors';
 import React from 'react';
 
 // This screen should ideally never be seen, as _layout.tsx redirects.
@@ -7,7 +7,7 @@ import React from 'react';
 export default function RootIndexScreen() {
   return (
     <View style={styles.container}>
-      <ActivityIndicator size="large" color={Colors.dark.tint} />
+      <ActivityIndicator size="large" color={colors.primary} />
     </View>
   );
 }
@@ -17,6 +17,6 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: Colors.dark.background,
+    backgroundColor: colors.background,
   },
 });

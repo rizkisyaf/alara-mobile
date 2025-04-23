@@ -1,22 +1,27 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
-  View, 
-  Text, 
-  StyleSheet, 
-  TouchableOpacity, 
-  Alert, 
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
   ActivityIndicator,
-  Linking // Import Linking
+  Alert,
+  Linking,
+  ScrollView,
 } from 'react-native';
-import { Colors } from '../constants/Colors';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { colors } from '../constants/Colors'; // Corrected import
 import { typography } from '../constants/typography';
-import { useAuth } from '../context/AuthContext'; // Import useAuth
-import { createBillingPortalSession } from '../api/billing'; // Import the new API helper
-import * as WebBrowser from 'expo-web-browser'; // Use Expo WebBrowser for better in-app experience
+import { getBillingPortalSessionUrl } from '../api/billing'; // Assuming API helper exists
+import { useAuth } from '../context/AuthContext';
+import Toast from 'react-native-toast-message'; // Import Toast
 
 function BillingScreen() {
   const { authToken, userStatus } = useAuth(); // Get authToken and userStatus
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingPortal, setIsLoadingPortal] = useState(false);
+  const [portalError, setPortalError] = useState(null);
+  const [isLoadingStatus, setIsLoadingStatus] = useState(false);
+  const [subscriptionStatus, setSubscriptionStatus] = useState(null);
 
   // Extract relevant subscription info from userStatus
   const status = userStatus?.subscription_status || 'unknown';
@@ -30,137 +35,134 @@ function BillingScreen() {
       Alert.alert('Error', 'Authentication required.');
       return;
     }
-    setIsLoading(true);
+    setIsLoadingPortal(true);
+    setPortalError(null);
     try {
-      const response = await createBillingPortalSession(authToken);
-      // Use Expo WebBrowser for a better in-app browser experience
-      await WebBrowser.openBrowserAsync(response.url);
-      // Linking.openURL(response.url); // Alternative if not using Expo WebBrowser
+      const response = await getBillingPortalSessionUrl(authToken);
+      Linking.openURL(response.url);
+      // Optionally show success Toast for initiating portal redirect
+      Toast.show({
+        type: 'success',
+        text1: 'Redirecting',
+        text2: 'Opening billing portal...'
+      });
     } catch (error) {
       console.error('Failed to open billing portal:', error);
-      Alert.alert('Error', error.message || 'Could not open billing portal.');
+      // setPortalError(error.message || 'Could not open billing portal.');
+      const message = error.message || 'Could not open billing portal.';
+      Toast.show({
+        type: 'error',
+        text1: 'Billing Portal Error',
+        text2: message
+      });
     } finally {
-      setIsLoading(false);
+      setIsLoadingPortal(false);
     }
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Billing & Subscription</Text>
+    <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        <Text style={styles.title}>Billing & Subscription</Text>
 
-      {/* Display Subscription Status */}
-      <View style={styles.infoContainer}>
-          <Text style={styles.infoLabel}>Status:</Text>
-          <Text style={[styles.infoValue, styles[`status_${status}`]]}>{status.replace('_', ' ').toUpperCase()}</Text> 
-      </View>
-      <View style={styles.infoContainer}>
-          <Text style={styles.infoLabel}>Current Plan:</Text>
-          <Text style={styles.infoValue}>{plan}</Text>
-      </View>
-      <View style={styles.infoContainer}>
-          <Text style={styles.infoLabel}>Renews/Expires On:</Text>
-          <Text style={styles.infoValue}>{expiry}</Text>
-      </View>
+        {/* Display Current Subscription Status (Placeholder) */}
+        <View style={styles.sectionContainer}>
+          <Text style={styles.sectionTitle}>Current Status</Text>
+          {isLoadingStatus ? (
+            <ActivityIndicator color={colors.primary} />
+          ) : (
+            <Text style={styles.statusText}>
+              {subscriptionStatus || 'Checking status...'}
+            </Text>
+          )}
+        </View>
 
-      {/* Manage Subscription Button */}
-      <TouchableOpacity 
-        style={[styles.button, isLoading && styles.buttonDisabled]}
-        onPress={handleManageSubscription}
-        disabled={isLoading}
-      >
-        {isLoading ? (
-          <ActivityIndicator size="small" color={colors.buttonTextPrimary} />
-        ) : (
-          <Text style={styles.buttonText}>Manage Subscription</Text>
-        )}
-      </TouchableOpacity>
+        {/* Add more sections as needed: payment history, invoices, etc. */}
 
-      <Text style={styles.infoText}>Manage your payment methods, view invoices, or cancel your subscription via the Stripe Customer Portal.</Text>
-
-    </View>
+        {/* Manage Subscription Button */}
+        <View style={styles.sectionContainer}>
+          <Text style={styles.sectionTitle}>Manage Your Subscription</Text>
+          <Text style={styles.description}>
+            Click below to manage your subscription details, view invoices, or update payment methods via the Stripe Customer Portal.
+          </Text>
+          <TouchableOpacity
+            style={[styles.button, isLoadingPortal && styles.buttonDisabled]}
+            onPress={handleManageSubscription}
+            disabled={isLoadingPortal}
+          >
+            {isLoadingPortal ? (
+              <ActivityIndicator size="small" color={colors.buttonTextPrimary} />
+            ) : (
+              <Text style={styles.buttonText}>Manage Subscription</Text>
+            )}
+          </TouchableOpacity>
+          {/* Remove the text error display, rely on Toast now */}
+          {/* {portalError && <Text style={styles.errorText}>{portalError}</Text>} */}
+        </View>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    // justifyContent: 'center', // Remove center alignment to place content normally
-    alignItems: 'center',
-    padding: 30, // Increase padding
-    paddingTop: 60, // Add more top padding
-    backgroundColor: Colors.dark.background,
+    backgroundColor: colors.background, // Use colors.*
+  },
+  scrollContent: {
+    padding: 20,
   },
   title: {
-    fontSize: typography.fontSizes.h2, // Adjust size
+    fontSize: typography.fontSizes.h2,
     fontWeight: typography.fontWeights.bold,
-    color: Colors.dark.text,
-    marginBottom: 40, // Increase spacing
+    color: colors.text, // Use colors.*
+    marginBottom: 30,
+    textAlign: 'center',
   },
-  infoContainer: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      width: '100%', // Take full width
-      marginBottom: 15,
-      paddingVertical: 10,
-      paddingHorizontal: 15,
-      backgroundColor: Colors.dark.card, // Add card background
-      borderRadius: 8,
+  sectionContainer: {
+    marginBottom: 30,
+    padding: 15,
+    backgroundColor: colors.card, // Use colors.*
+    borderRadius: 8,
   },
-  infoLabel: {
-      fontSize: typography.fontSizes.body,
-      color: Colors.dark.textSecondary,
-      fontWeight: typography.fontWeights.medium,
+  sectionTitle: {
+    fontSize: typography.fontSizes.h4,
+    fontWeight: typography.fontWeights.medium,
+    color: colors.textSecondary, // Use colors.*
+    marginBottom: 10,
   },
-  infoValue: {
-      fontSize: typography.fontSizes.body,
-      color: Colors.dark.text,
-      fontWeight: typography.fontWeights.regular,
+  statusText: {
+    fontSize: typography.fontSizes.body,
+    color: colors.text, // Use colors.*
+    fontStyle: 'italic',
   },
-  // Status-specific styling (add more as needed)
-  status_active: {
-      color: Colors.success || 'green',
-      fontWeight: 'bold',
-  },
-  status_canceled: {
-       color: Colors.error || 'red',
-       fontWeight: 'bold',
-  },
-   status_active_grace: {
-      color: Colors.warning || 'orange',
-      fontWeight: 'bold',
-  },
-    status_past_due: {
-      color: Colors.error || 'red',
-      fontWeight: 'bold',
-  },
-   status_unknown: {
-      color: Colors.dark.textSecondary,
-      fontStyle: 'italic',
+  description: {
+    fontSize: typography.fontSizes.body,
+    color: colors.textSecondary, // Use colors.*
+    marginBottom: 15,
+    lineHeight: typography.lineHeights.body,
   },
   button: {
-    width: '100%',
-    height: 50,
-    backgroundColor: Colors.dark.tint,
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: colors.primary, // Use colors.*
+    paddingVertical: 12,
+    paddingHorizontal: 20,
     borderRadius: 8,
-    marginTop: 30, // Add margin top
-    marginBottom: 20,
+    alignItems: 'center',
+    marginTop: 10,
   },
   buttonDisabled: {
-      opacity: 0.6,
+    opacity: 0.6,
   },
   buttonText: {
-    color: Colors.dark.background,
+    color: colors.buttonTextPrimary, // Use colors.*
     fontSize: typography.fontSizes.large,
     fontWeight: typography.fontWeights.bold,
   },
-  infoText: {
-      fontSize: typography.fontSizes.small,
-      color: Colors.dark.textSecondary,
-      textAlign: 'center',
-      marginTop: 10,
-      lineHeight: 18,
+  errorText: {
+    color: colors.error,
+    marginTop: 10,
+    textAlign: 'center',
+    fontSize: typography.fontSizes.small,
   },
 });
 
