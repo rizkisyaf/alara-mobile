@@ -8,7 +8,10 @@ import {
   StatusBar,
   Alert,
   ActivityIndicator,
-  ScrollView
+  ScrollView,
+  Switch,
+  Platform,
+  Image
 } from 'react-native';
 import Toast from 'react-native-toast-message'; // Import Toast
 import { useStripe } from '@stripe/stripe-react-native';
@@ -16,26 +19,61 @@ import { colors } from '../constants/Colors';
 import { typography } from '../constants/typography';
 import { useAuth } from '../context/AuthContext'; // Import useAuth for logout
 import { createSubscriptionIntent } from '../api/billing'; // Import the new API function
+import { Ionicons } from '@expo/vector-icons'; // <-- Import icons
+import Collapsible from 'react-native-collapsible'; // <-- Import Collapsible
+
+// --- Define Prices --- >
+const MONTHLY_PRICE_USD = 12;
+const YEARLY_PRICE_USD = 120;
+const YEARLY_MONTHLY_EQUIVALENT_USD = Math.round(YEARLY_PRICE_USD / 12);
+// --- < -------------
+
+// --- FAQ Data --- >
+const faqData = [
+  {
+    id: 1,
+    question: 'Q: What do I get with Alara Access?',
+    answer: 'Unlimited AI chat & analysis tools, connections to all supported exchanges, portfolio tracking, market scanners, and premium indicators.'
+  },
+  {
+    id: 2,
+    question: 'Q: How does Alara help my trading?',
+    answer: 'Alara provides data-driven insights from your exchanges and market data (without financial advice). It helps research, monitor, and stay informed based on your trading goals.'
+  },
+  {
+    id: 3,
+    question: 'Q: Can I cancel anytime?',
+    answer: 'Yes, manage your subscription anytime via the billing portal (link in settings). Access continues until the end of your current paid period.'
+  },
+  {
+    id: 4,
+    question: 'Q: Is my exchange data secure?',
+    answer: 'Yes. Your API keys are encrypted and only used by the secure backend to fetch data or execute actions you request.'
+  },
+  // Add more questions here
+];
+// --- < --------
 
 // TODO: Add navigation prop type if using TypeScript
 function PaywallScreen({ navigation }) {
-  const [selectedPlan, setSelectedPlan] = useState(null); // 'monthly' or 'yearly'
-  const [isSubscribing, setIsSubscribing] = useState(false); // Loading state for subscribe button
-  const { logout, authToken, userStatus } = useAuth(); // Get token and userStatus
+  // const [selectedPlan, setSelectedPlan] = useState(null); // Remove this
+  const [isYearly, setIsYearly] = useState(false); // <-- Add state for toggle (false = monthly)
+  const [isSubscribing, setIsSubscribing] = useState(false);
+  const [expandedFaqIndex, setExpandedFaqIndex] = useState(null); // <-- State for accordion
+  const { authToken, userStatus } = useAuth(); // Get token and userStatus
   const { initPaymentSheet, presentPaymentSheet } = useStripe(); // Stripe hooks
 
   // --- Fetch Subscription Intent and Initialize PaymentSheet ---
-  const initializePaymentSheet = async () => {
-    if (!selectedPlan || !authToken) {
-      // Should not happen if button is disabled correctly, but good practice
-      console.log('InitializePaymentSheet: Missing plan or auth token.');
+  const initializePaymentSheet = async (plan_id) => {
+    if (!plan_id || !authToken) {
+      console.log('InitializePaymentSheet: Missing plan_id or auth token.');
       return false;
     }
 
     setIsSubscribing(true);
     try {
-      console.log(`Calling createSubscriptionIntent for plan: ${selectedPlan}`);
-      const { client_secret, subscription_id } = await createSubscriptionIntent(authToken, selectedPlan);
+      console.log(`Calling createSubscriptionIntent for plan: ${plan_id}`);
+      const { client_secret, subscription_id } = await createSubscriptionIntent(authToken, plan_id);
 
       console.log('Initializing Payment Sheet...');
       const { error } = await initPaymentSheet({
@@ -113,22 +151,18 @@ function PaywallScreen({ navigation }) {
 
   // --- Main Subscribe Handler --- 
   const handleSubscribe = async () => {
-    if (!selectedPlan) {
-      // Keep Alert for immediate client-side validation feedback
-      Alert.alert('Select a Plan', 'Please choose a subscription plan first.');
-      return;
-    }
+    // Remove check for selectedPlan, button disabled state handles this
+    // if (!selectedPlan) { ... }
     
-    const initialized = await initializePaymentSheet();
+    // Determine plan_id based on toggle state
+    const plan_id = isYearly ? 'yearly' : 'monthly';
+
+    // Pass the determined plan_id to initializePaymentSheet
+    const initialized = await initializePaymentSheet(plan_id); 
     if (initialized) {
       await openPaymentSheet();
     }
     // Loading state is handled within initializePaymentSheet and openPaymentSheet
-  };
-
-  const handleLogout = async () => {
-    await logout();
-    // Navigation should automatically switch back to Auth stack via AppNavigator
   };
 
   return (
@@ -136,61 +170,87 @@ function PaywallScreen({ navigation }) {
       <StatusBar barStyle="light-content" backgroundColor={colors.background} />
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         <Text style={styles.title}>Unlock Alara Access</Text>
-        <Text style={styles.subtitle}>Choose your plan to continue:</Text>
+        {/* Subtitle can be removed or kept */} 
+        {/* <Text style={styles.subtitle}>Choose your plan:</Text> */}
 
-        {/* Plan Options */}
-        <View style={styles.planContainer}>
-          {/* Monthly Plan */}
-          <TouchableOpacity
-            style={[
-              styles.planOption,
-              selectedPlan === 'monthly' && styles.planOptionSelected,
-            ]}
-            onPress={() => setSelectedPlan('monthly')}
-            disabled={isSubscribing} // Disable plan selection during subscribe process
-          >
-            <Text style={styles.planTitle}>Monthly</Text>
-            <Text style={styles.planPrice}>$12</Text>
-            <Text style={styles.planFrequency}>per month</Text>
-          </TouchableOpacity>
+        {/* --- New Segmented Control Plan Display --- */}
+        <View style={styles.planDisplayContainer}>
+          
+          {/* Segmented Control */}
+          <View style={styles.segmentedControlContainer}>
+            <TouchableOpacity 
+              style={[styles.segment, !isYearly && styles.segmentActive]} 
+              onPress={() => setIsYearly(false)}
+              activeOpacity={0.8}
+            >
+              <Text style={[styles.segmentText, !isYearly && styles.segmentTextActive]}>Monthly</Text>
+            </TouchableOpacity>
+            <TouchableOpacity 
+              style={[styles.segment, isYearly && styles.segmentActive]} 
+              onPress={() => setIsYearly(true)}
+              activeOpacity={0.8}
+            >
+              <Text style={[styles.segmentText, isYearly && styles.segmentTextActive]}>Yearly</Text>
+            </TouchableOpacity>
+          </View>
 
-          {/* Yearly Plan */}
-          <TouchableOpacity
-            style={[
-              styles.planOption,
-              selectedPlan === 'yearly' && styles.planOptionSelected,
-            ]}
-            onPress={() => setSelectedPlan('yearly')}
-            disabled={isSubscribing}
-          >
-             <View style={styles.badgeContainer}>
-                <Text style={styles.badgeText}>'SAVE 16%'</Text>
-            </View>
-            <Text style={styles.planTitle}>Yearly</Text>
-            <Text style={styles.planPrice}>$120</Text>
-            <Text style={styles.planFrequency}>per year</Text>
-            <Text style={styles.planEquivalent}>($10/month)</Text>
-          </TouchableOpacity>
+          {/* Integrated Price Display */} 
+          <View style={styles.priceInfoContainer}> 
+            <Text style={styles.priceText}>
+              ${isYearly ? YEARLY_MONTHLY_EQUIVALENT_USD : MONTHLY_PRICE_USD}
+              <Text style={styles.priceUnit}> / month</Text> { /* Always show / month */}
+            </Text>
+            <Text style={styles.billingCycleText}> 
+              {isYearly ? `Billed annually` : 'Billed monthly'}
+            </Text>
+          </View>
+
         </View>
+        {/* --- End New Plan Display --- */}
 
         {/* Subscribe Button */}
         <TouchableOpacity
-          style={[styles.button, !selectedPlan && styles.buttonDisabled]} // Disable if no plan selected
+          style={[styles.button, isSubscribing && styles.buttonDisabled]} // Disable only when subscribing
           onPress={handleSubscribe}
-          disabled={!selectedPlan}
+          disabled={isSubscribing} // Disable only when subscribing
         >
-          <Text style={styles.buttonText}>Subscribe</Text>
+          {isSubscribing ? (
+             <ActivityIndicator size="small" color={colors.buttonTextPrimary} />
+           ) : (
+             <Text style={styles.buttonText}>Subscribe</Text>
+           )}
         </TouchableOpacity>
 
-        {/* TODO: Add Restore Purchases link */}
-        {/* <TouchableOpacity style={styles.linkContainer}>
-          <Text style={styles.linkText}>Restore Purchases</Text>
-        </TouchableOpacity> */}
-
-        {/* Logout Button */}
-        <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
-          <Text style={styles.logoutButtonText}>Logout</Text>
-        </TouchableOpacity>
+        {/* --- FAQ Section --- */}
+        <View style={styles.faqContainer}>
+            <Text style={styles.faqTitle}>Frequently Asked Questions</Text>
+            
+            {faqData.map((item, index) => {
+              const isCollapsed = expandedFaqIndex !== index;
+              return (
+                <View key={item.id} style={styles.faqItem}>
+                  <TouchableOpacity 
+                    style={styles.faqQuestionRow} 
+                    onPress={() => setExpandedFaqIndex(isCollapsed ? index : null)} // Updated logic slightly for clarity
+                    activeOpacity={0.7} 
+                  >
+                    <Text style={styles.faqQuestion}>{item.question}</Text>
+                    <Ionicons 
+                      name={isCollapsed ? "chevron-forward" : "chevron-down"} // Icon reflects collapsed state
+                      style={styles.faqIcon} 
+                    />
+                  </TouchableOpacity>
+                  
+                  {/* --- Wrap answer in Collapsible --- */}
+                  <Collapsible collapsed={isCollapsed} align="center">
+                    <Text style={styles.faqAnswer}>{item.answer}</Text>
+                  </Collapsible>
+                  {/* --- End Collapsible --- */}
+                </View>
+              );
+            })}
+        </View>
+        {/* --- End FAQ Section --- */}
 
       </ScrollView>
     </SafeAreaView>
@@ -221,61 +281,104 @@ const styles = StyleSheet.create({
     marginBottom: 30,
     textAlign: 'center',
   },
-  planContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    width: '100%',
-    marginBottom: 40,
-  },
-  planOption: {
-    borderWidth: 2,
-    borderColor: colors.tint,
-    borderRadius: 10,
-    padding: 20,
+  // --- Styles for Segmented Control / Dynamic Display / FAQ --- >
+  planDisplayContainer: {
     alignItems: 'center',
-    width: '45%', // Adjust width for spacing
-    backgroundColor: colors.card, // Use card background
+    marginBottom: 40,
+    width: '100%',
   },
-  planOptionSelected: {
-    borderColor: colors.tint, // Highlight selected plan (using accent/primary)
-    backgroundColor: '#222', // Slightly lighter background when selected
+  segmentedControlContainer: {
+    flexDirection: 'row',
+    backgroundColor: colors.card, // Background for the whole control
+    borderRadius: 25, // Fully rounded ends
+    overflow: 'hidden', // Clip segment backgrounds
+    borderWidth: 1,
+    borderColor: colors.border, // Optional border
+    marginBottom: 20,
+    width: '80%', // Adjust width as needed
+    alignSelf: 'center',
   },
-  planTitle: {
-    fontSize: typography.fontSizes.h4,
-    fontWeight: typography.fontWeights.semiBold,
-    color: colors.text,
-    marginBottom: 5,
+  segment: {
+    flex: 1, // Each segment takes half the space
+    paddingVertical: 10,
+    alignItems: 'center', // Center text horizontally
+    justifyContent: 'center', // Center text vertically
   },
-  planPrice: {
-    fontSize: typography.fontSizes.h2,
+  segmentActive: {
+    backgroundColor: colors.primary, // Active background
+  },
+  segmentText: {
+    fontSize: typography.fontSizes.body,
+    color: colors.textSecondary,
+  },
+  segmentTextActive: {
+    color: colors.buttonTextPrimary, // Use button text color on active background
+    fontWeight: typography.fontWeights.bold,
+  },
+  priceInfoContainer: {
+    alignItems: 'center', 
+    marginTop: 10,
+  },
+  priceText: {
+    fontSize: typography.fontSizes.h1, 
     fontWeight: typography.fontWeights.bold,
     color: colors.text,
     marginBottom: 2,
   },
-  planFrequency: {
+  priceUnit: { // Renamed from priceFrequency
+    fontSize: typography.fontSizes.large, // Slightly larger than billingCycleText
+    color: colors.text,
+    fontWeight: typography.fontWeights.regular,
+  },
+  billingCycleText: {
     fontSize: typography.fontSizes.small,
-    color: colors.text, // Slightly dimmer text
-    marginBottom: 5,
+    color: colors.textSecondary, // Less prominent color
+    marginTop: 4, // Increased spacing
   },
-  planEquivalent: {
-    fontSize: typography.fontSizes.small,
-    color: colors.success, // Use success color
-    marginTop: 5,
+  faqContainer: {
+    marginTop: 60, // Increased top margin
+    marginBottom: 40, // Add bottom margin
+    marginHorizontal: 10, // Add horizontal margin
+    width: 'auto', // Adjust width based on horizontal margin
+    // width: '100%', 
   },
-  badgeContainer: {
-      position: 'absolute',
-      top: -12, // Adjust position
-      // right: -10,
-      backgroundColor: colors.success, // Badge color
-      paddingHorizontal: 8,
-      paddingVertical: 3,
-      borderRadius: 12, // Pill shape
-      zIndex: 1,
+  faqTitle: {
+    fontSize: typography.fontSizes.h3,
+    fontWeight: typography.fontWeights.bold,
+    color: colors.text,
+    marginBottom: 20,
+    textAlign: 'center',
   },
-  badgeText: {
-      color: '#fff', // White text for badge
-      fontSize: typography.fontSizes.caption,
-      fontWeight: typography.fontWeights.bold,
+  faqItem: {
+    marginBottom: 10, // Reduced bottom margin
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+    paddingBottom: 10, // Reduced bottom padding
+  },
+  faqQuestionRow: { // New style for the touchable row
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 5, // Add some padding to the row
+  },
+  faqQuestion: {
+    fontSize: typography.fontSizes.large,
+    fontWeight: typography.fontWeights.semiBold,
+    color: colors.text,
+    flex: 1, // Allow question text to wrap
+    marginRight: 10, // Space between text and icon
+    // Remove marginBottom as answer is now conditional
+  },
+  faqIcon: { // New style for the +/- icon
+    fontSize: 22,
+    color: colors.textSecondary,
+  },
+  faqAnswer: {
+    fontSize: typography.fontSizes.body,
+    color: colors.textSecondary,
+    lineHeight: 20, 
+    marginTop: 8, // Add margin when visible
+    paddingLeft: 5, // Indent answer slightly
   },
   button: {
     width: '100%',
@@ -293,18 +396,6 @@ const styles = StyleSheet.create({
   buttonText: {
     color: colors.buttonTextPrimary,
     fontSize: typography.fontSizes.large,
-    fontWeight: typography.fontWeights.bold,
-  },
-  logoutButton: {
-    // Remove absolute positioning to keep it in flow
-    // position: 'absolute',
-    // bottom: 40,
-    alignSelf: 'center', // Center the button
-    marginTop: 30, // Add space above the logout button
-  },
-  logoutButtonText: {
-    color: colors.error, // Use error color for logout
-    fontSize: typography.fontSizes.medium,
     fontWeight: typography.fontWeights.bold,
   },
   // Link styles if needed later
