@@ -163,8 +163,8 @@ function PaywallScreen({ navigation }) {
             onPress={() => setSelectedPlan('yearly')}
             disabled={isSubscribing}
           >
-             <View style={styles.badgeContainer}> // Badge for Yearly
-                <Text style={styles.badgeText}>SAVE 16%</Text>
+             <View style={styles.badgeContainer}>
+                <Text style={styles.badgeText}>'SAVE 16%'</Text>
             </View>
             <Text style={styles.planTitle}>Yearly</Text>
             <Text style={styles.planPrice}>$120</Text>
@@ -203,6 +203,8 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   scrollContainer: {
+    flexGrow: 1, // Allow container to grow
+    justifyContent: 'center', // Center content vertically
     padding: 20,
     paddingBottom: 40,
   },
@@ -278,7 +280,7 @@ const styles = StyleSheet.create({
   button: {
     width: '100%',
     height: 50,
-    backgroundColor: colors.tint,
+    backgroundColor: colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
     borderRadius: 8,
@@ -289,18 +291,21 @@ const styles = StyleSheet.create({
     opacity: 0.5,
   },
   buttonText: {
-    color: colors.background,
+    color: colors.buttonTextPrimary,
     fontSize: typography.fontSizes.large,
     fontWeight: typography.fontWeights.bold,
   },
   logoutButton: {
-    position: 'absolute',
-    bottom: 40,
-    // alignSelf: 'center', // Center if needed
+    // Remove absolute positioning to keep it in flow
+    // position: 'absolute',
+    // bottom: 40,
+    alignSelf: 'center', // Center the button
+    marginTop: 30, // Add space above the logout button
   },
   logoutButtonText: {
     color: colors.error, // Use error color for logout
     fontSize: typography.fontSizes.medium,
+    fontWeight: typography.fontWeights.bold,
   },
   // Link styles if needed later
   // linkContainer: {

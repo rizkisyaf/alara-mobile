@@ -41,20 +41,20 @@ function LoginScreen() {
       console.log('Calling loginUser API...');
       const response = await loginUser(email, password);
 
-      if (response?.access_token) {
+      if (response?.token) {
         console.log('Login successful, calling context login...');
-        await login(response.access_token);
+        await login(response.token);
 
       } else {
-        console.error('Login Error: API response missing access_token', response);
+        console.error('Login Error: API response missing token', response);
         Toast.show({
           type: 'error',
           text1: 'Login Failed',
           text2: 'Could not process login response. Please try again.'
         });
       }
-
-    } catch (error) {
+    }
+    catch (error) {
       console.error('Login failed:', error);
       const message = error instanceof Error ? error.message : 'An unexpected error occurred.';
       Toast.show({

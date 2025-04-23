@@ -11,19 +11,20 @@ export const loginUser = async (email, password) => {
   const loginUrl = `${API_BASE_URL}/api/auth/login`;
   console.log(`Attempting login to: ${loginUrl}`);
 
-  // FastAPI's OAuth2PasswordRequestForm expects form data
-  const formData = new URLSearchParams();
-  formData.append('username', email); // Use email as the username
-  formData.append('password', password);
+  // Backend expects JSON for the UserLogin model
+  const payload = {
+    email: email, // Match the UserLogin Pydantic model field names
+    password: password,
+  };
 
   try {
     const response = await fetch(loginUrl, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
+        'Content-Type': 'application/json', // Send JSON
         'Accept': 'application/json', // Indicate we prefer JSON responses
       },
-      body: formData.toString(),
+      body: JSON.stringify(payload), // Send JSON string
     });
 
     // Check if the request was successful FIRST
@@ -118,7 +119,7 @@ export const registerUser = async (name, email, password) => {
  * @throws {Error} - Throws an error if the request fails or returns an error status.
  */
 export const fetchUserStatus = async (token) => {
-  const statusUrl = `${API_BASE_URL}/api/users/me/status`;
+  const statusUrl = `${API_BASE_URL}/api/auth/users/me`;
   console.log(`Fetching user status from: ${statusUrl}`);
 
   if (!token) {
